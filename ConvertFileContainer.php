@@ -19,6 +19,8 @@ class ConvertFlieContainer
 		} elseif ($convertFile instanceof ConvertFile) {
 			$isConvertFile = true;
 			$file          = $convertFile->getFileInfo();
+		} else {
+			throw new Exception();
 		}
 
 		$extension = static::canonicalExtension($file->getExtension());
