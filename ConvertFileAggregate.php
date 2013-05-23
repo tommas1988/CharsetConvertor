@@ -52,7 +52,7 @@ class ConvertFileAggregate
 		$filters = array(
 			'files'     => $this->filenames,
 			'dirs'      => array(),
-			'extenions' => $this->container->getConvertExtensions(),
+			'extensions' => $this->container->getConvertExtensions(),
 		);
 		foreach ($this->convertDirs s $dir) {
 			$iterator = new ConvretDirectoryIterator($dir, $filters);
