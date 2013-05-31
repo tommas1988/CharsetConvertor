@@ -1,4 +1,8 @@
 <?php
+namespace Tcc;
+
+use Tcc\Iterator\ConvertDirectoryIterator;
+
 class ConvertFileAggregate
 {
 	protected $loadedConvertFiles = array();
@@ -56,7 +60,7 @@ class ConvertFileAggregate
 		);
 		foreach ($this->convertDirs s $dir) {
 			$iterator = new ConvretDirectoryIterator($dir, $filters);
-			foreach (new RecursiveIteratorIterator($iterator) as $convertFile) {
+			foreach (new \RecursiveIteratorIterator($iterator) as $convertFile) {
 				$this->loadedConvertFiles[] = $convertFile;
 			}
 			$filters['dirs'][] = $dir['name'];
@@ -69,7 +73,7 @@ class ConvertFileAggregate
 	protected function resolveFileOption(array $option, $inputCharset, $outputCharset)
 	{
 		if (!isset($option['name'])) {
-			throw new Exception();
+			throw new \Exception();
 		}
 
 		$convertFile = ConvertFileContainer::conanicalPath($option['name']);
@@ -87,7 +91,7 @@ class ConvertFileAggregate
 	protected function resolveDirOptions(array $dirOption, $inputCharset = null, $outputCharset = null, $parentDir = null)
 	{
 		if (!isset($dirOption['name'])) {
-			throw new Exception();
+			throw new \Exception();
 		}
 
 		$concatWithParentDir = function($parentDir, $name) {
@@ -122,7 +126,7 @@ class ConvertFileAggregate
 		if (isset($dirOption['files'])) {
 			foreach ($dirOption['files'] as $convertFileOption) {
 				if (!isset($convertFileOption['name'])) {
-					throw new Exception();
+					throw new \Exception();
 				}
 
 				$convertFileOption['name'] = $concatWithParentDir($dirname, $convertFileOption['name']);

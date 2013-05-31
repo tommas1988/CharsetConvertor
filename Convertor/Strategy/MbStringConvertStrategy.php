@@ -1,7 +1,9 @@
 <?php
+namespace Tcc\Convertor\Strategy;
+
 class MbStringConvertStrategy implements ConvertStrategyInterface
 {
-	public function convert(ConvertFile $convertFIle)
+	public function convert($contents, $inputCharset, $outputCharset)
 	{
 		
 	}

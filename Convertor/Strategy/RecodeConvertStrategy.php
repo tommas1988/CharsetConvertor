@@ -1,7 +1,9 @@
 <?php
+namespace Tcc\Convertor\Strategy;
+
 class RecodeConvertStrategy implements ConvertStrategyInterface
 {
-	public function convert(ConvertFile $convertFile)
+	public function convert($contents, $inputCharset, $outputCharset)
 	{
 		
 	}

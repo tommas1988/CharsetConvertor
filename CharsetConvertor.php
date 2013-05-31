@@ -1,14 +1,18 @@
 <?php
+namespace Tcc;
+
+use Tcc\Convertor\Convertor;
+
 class CharsetConvertor
 {
 	protected $convertor;
-	protected $convertorType;
 	protected $convertFileContainer;
+	protected $convertedFiles = array();
 
 	public function __construct(ConvertFileContainer $container = null)
 	{
 		if (!$this->checkEnvironment) {
-			throw new Exception();
+			throw new \Exception();
 		}
 
 		if (!$container) {
@@ -19,26 +23,25 @@ class CharsetConvertor
 
 	public function checkEnvironment()
 	{
-		return ConvertorFactory::checkEnvironment();
+		return Convertor::checkEnvironment();
 	}
 
-	public function setConvertor($type = null)
+	public function setConvertor($strategy = null)
 	{
-		$availableConvertors = ConvertorFactory::getAvailableConvertors();
-		$convertorNames      = array_keys($availableConvertors);
+		$strategy = $strategy ?: 'iconv';
 
-		if (is_null($type) && !empty($availableConvertors)) {
-			$type = $convertorNames[0];
+		if (is_string($strategy)) {
+			if (!$strategyClass = Convertor::getConvertStrategyClass($strategy)) {
+				throw new \Exception();
+			}
+			$convertStrategy = new $strategyClass;
+		} elseif ($strategy instanceof ConvertStrategyInterface) {
+			$convertStrategy = $strategy;
+		} else {
+			throw new \Exception();
 		}
 
-		$type = strtolower($type);
-		if (!in_array($type, $convertorNames)) {
-			throw new Exception();
-		}
-
-		$convertor = ConvertorFactory::factory($type);
-		$this->convertorType = $type;
-		$this->convertor     = $convertor;
+		$this->convertor = new Convertor($convertStrategy);
 	}
 
 	public function getConvertor()
@@ -96,7 +99,13 @@ class CharsetConvertor
 		$convertFiles = $this->container->getConvertFiles();
 
 		foreach ($convertFiles as $convertFile) {
-			$this->convert($convertFile);
+			try {
+				$this->convertor->convert($convertFile);
+				$this->convertedFiles[] = $convertFile->getPathname();
+			} catch (\Exception $e) {
+				
+				break;
+			}
 		}
 	}
 

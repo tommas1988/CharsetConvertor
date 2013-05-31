@@ -1,4 +1,6 @@
 <?php
+namespace Tcc;
+
 class ConvertFlieContainer
 {
 	protected $loadedConvertFiles = array();
@@ -13,25 +15,29 @@ class ConvertFlieContainer
 		$isConvertFile = false;
 
 		if (is_string($convertFile)) {
-			$file = new SplFileInfo($convertFile);
-		} elseif ($convertFile instanceof SplFileInfo) {
+			$file = new \SplFileInfo($convertFile);
+		} elseif ($convertFile instanceof \SplFileInfo) {
 			$file = $convertFile;
 		} elseif ($convertFile instanceof ConvertFile) {
 			$isConvertFile = true;
 			$file          = $convertFile->getFileInfo();
 		} else {
-			throw new Exception();
+			throw new \Exception();
+		}
+
+		if (!$file->isReadable()) {
+			throw new \Exception();
 		}
 
 		$extension = static::canonicalExtension($file->getExtension());
 		if (!in_array($extension, $this->getConvertExtensions())) {
 			unset($file, $convertFile);
-			return ;
+			return false;
 		}
 
 		if ($isConvertFile) {
 			$this->loadedConvertFiles[] = $convertFile;
-			return ;
+			return true;
 		}
 
 		$this->convertFiles[] = array(
@@ -39,11 +45,12 @@ class ConvertFlieContainer
 			'input_charset'  => $inputCharset,
 			'output_charset' => $outputCharset
 		);
+		return true;
 	}
 	
 	public function addFiles(array $convertFiles)
 	{
-		$this->convertAggregates[] = new ConvertAggregate($convertFiles, $this);
+		$this->convertAggregates[] = new ConvertFileAggregate($convertFiles, $this);
 	}
 	
 	public function getConvertFiles()
@@ -82,7 +89,7 @@ class ConvertFlieContainer
 	public static function conanicalPath($path)
 	{
 		if (!$path = realpath($path)) {
-			throw new Exception();
+			throw new \Exception();
 		}
 
 		$path = rtrim(str_replace('\\', '/', $path), '/');

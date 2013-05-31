@@ -1,18 +1,16 @@
 <?php
-class ConvertFile implements IteratorAggregate
+namespace Tcc;
+
+class ConvertFile implements \IteratorAggregate
 {
 	protected $inputCharset;
 	protected $outputCharset;
 	protected $fileInfo;
 	
-	public function __construct($file, $inputCharset, $outputCharset)
+	public function __construct(\SplFileInfo $file, $inputCharset, $outputCharset)
 	{
-		if (!$file instanceof SplFileInfo) {
-			throw new Exception();
-		}
-
 		if (!$file->isFile() || !$file->isReadable()) {
-			throw new Exception();
+			throw new \Exception();
 		}
 
 		$this->fileInfo      = $file;
@@ -22,7 +20,7 @@ class ConvertFile implements IteratorAggregate
 
 	public function getIterator()
 	{
-		return $this->fileInfo;
+		return $this->fileInfo->openFile();
 	}
 	
 	public function getInputCharset()
@@ -40,8 +38,29 @@ class ConvertFile implements IteratorAggregate
 		return $this->fileInfo;
 	}
 
-	public function getFilename()
+	public function getFilename($withoutExtension = false)
 	{
+		$fileInfo = $this->fileInfo;
 
+		if ($withoutExtension) {
+			return substr($fileInfo->getFilename(), 0, -strlen($fileInfo->getExtension()));
+		}
+
+		return $fileInfo->getFilename();
+	}
+
+	public function getPath()
+	{
+		return $this->fileInfo->getPath();
+	}
+
+	public function getPathname()
+	{
+		return $this->fileInfo->getPathname();
+	}
+
+	public function getExtension()
+	{
+		return $this->fileInfo->getExtension();
 	}
 }

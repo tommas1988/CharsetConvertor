@@ -1,5 +1,10 @@
 <?php
-class ConvertDirectoryIterator extends RecursiveFilterIterator
+namespace Tcc\Iterator;
+
+use Tcc\ConvertFileContainer;
+use Tcc\ConvertFile;
+
+class ConvertDirectoryIterator extends \RecursiveFilterIterator
 {
 	protected $dirname;
 	protected $inputCharset;
@@ -15,7 +20,7 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 			|| !isset($filters['dirs'])
 			|| !isset($filters['extensions'])
 		) {
-			throw new Exception();
+			throw new \Exception();
 		}
 
 		$this->dirname       = $convertDirOption['name'];
@@ -23,7 +28,7 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 		$this->outputCharset = $convertDirOption['output_charset'];
 		$this->fiters        = $filters;
 
-		$iterator = new RecursiveDirectoryIterator($this->dirname);
+		$iterator = new \RecursiveDirectoryIterator($this->dirname);
 
 		parent::__construct($iterator);
 	}
