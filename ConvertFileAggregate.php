@@ -3,7 +3,7 @@ namespace Tcc;
 
 use Tcc\Iterator\ConvertDirectoryIterator;
 
-class ConvertFileAggregate
+class ConvertFileAggregate implements ConvertFileAggregateInterface
 {
 	protected $loadedConvertFiles = array();
 	protected $convertFiles       = array();
@@ -13,22 +13,25 @@ class ConvertFileAggregate
 
 	protected $loadFinished       = false;
 	
-	public function __construct(array $convertFiles, ConvertFileContainer $container)
+	public function __construct(array $convertFiles)
 	{
 		$this->convertFiles = $convertFiles;
-		$this->container    = $container;
-
-		$this->resolveConvertFiles();
 	}
 
 	public function getRawConvertFiles()
 	{
 		return $this->convertFiles;
 	}
-	
-	public function resolveConvertFiles()
+
+	public function getConvertDirs()
 	{
-		$convertFiles = $this->convertFiles;
+		return $this->convertDirs;
+	}
+	
+	public function addConvertFiles(ConvertFileContainterInterface $container)
+	{
+		$this->container = $container;
+		$convertFiles    = $this->convertFiles;
 
 		$inputCharset  = (isset($convertFiles['input_charset'])) ? $convertFiles['input_charset'] : null;
 		$outputCharset = (isset($convertFiles['output_charset'])) ? $convertFiles['output_charset'] : null;
@@ -58,7 +61,7 @@ class ConvertFileAggregate
 			'dirs'      => array(),
 			'extensions' => $this->container->getConvertExtensions(),
 		);
-		foreach ($this->convertDirs s $dir) {
+		foreach ($this->convertDirs as $dir) {
 			$iterator = new ConvretDirectoryIterator($dir, $filters);
 			foreach (new \RecursiveIteratorIterator($iterator) as $convertFile) {
 				$this->loadedConvertFiles[] = $convertFile;

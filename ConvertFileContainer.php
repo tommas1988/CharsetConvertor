@@ -1,7 +1,7 @@
 <?php
 namespace Tcc;
 
-class ConvertFlieContainer
+class ConvertFileContainer implements ConvertFileContainerInterface
 {
 	protected $loadedConvertFiles = array();
 	protected $convertFiles       = array();
@@ -18,14 +18,14 @@ class ConvertFlieContainer
 			$file = new \SplFileInfo($convertFile);
 		} elseif ($convertFile instanceof \SplFileInfo) {
 			$file = $convertFile;
-		} elseif ($convertFile instanceof ConvertFile) {
+		} elseif ($convertFile instanceof ConvertFileInterface) {
 			$isConvertFile = true;
-			$file          = $convertFile->getFileInfo();
+			$file          = $convertFile;
 		} else {
 			throw new \Exception();
 		}
 
-		if (!$file->isReadable()) {
+		if (!$isConvertFile && !$file->isReadable()) {
 			throw new \Exception();
 		}
 
@@ -48,9 +48,10 @@ class ConvertFlieContainer
 		return true;
 	}
 	
-	public function addFiles(array $convertFiles)
+	public function addFiles(ConvertFileAggregateInterface $aggregate)
 	{
-		$this->convertAggregates[] = new ConvertFileAggregate($convertFiles, $this);
+		$aggregate->addConvertFiles($this);
+		$this->convertAggregates[] = $aggregate;
 	}
 	
 	public function getConvertFiles()
@@ -62,7 +63,7 @@ class ConvertFlieContainer
 		foreach ($this->convertFiles as $convertFile) {
 			$this->loadedConvertFiles[] = new ConvertFile($convertFile['name'], 
 														  $convertFile['input_charset'], 
-														  $convertFile['output_charset'], 
+														  $convertFile['output_charset']
 													);
 		}
 
@@ -77,7 +78,10 @@ class ConvertFlieContainer
 	public function setConvertExtensions(array $convertExtensions)
 	{
 		foreach ($convertExtensions as $extension) {
-			$this->convertExtensions[] = staitc::canonicalExtension($extension);
+			$extension = static::canonicalExtension($extension);
+			if (!in_array($extension, $this->convertExtensions)) {
+				$this->convertExtensions[] = $extension;
+			}
 		}
 	}
 

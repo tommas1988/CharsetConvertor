@@ -7,13 +7,13 @@ array(
 	'input_charset' => '',
 	'output_charset' => '',
 
-	'directory' => array(
+	'dirs' => array(
 		array(
 			'input_charset' => '',
 			'output_charset' => '',
 			'name' => '',
 
-			'subdirectory' => 
+			'subdir' => 
 
 			'file' => array(
 				array(
@@ -27,7 +27,7 @@ array(
 		...
 	),
 
-	'file' => array(
+	'files' => array(
 		array(
 			'name' => 'foo',
 			'input_charset' => 'gbk',
