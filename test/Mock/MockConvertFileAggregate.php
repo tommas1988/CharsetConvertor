@@ -1,16 +1,21 @@
 <?php
 class MockConvertFileAggregate implements Tcc\ConvertFileAggregateInterface
 {
-	public function addConvertFiles(Tcc\ConvertFileContainer $container)
-	{
+	protected $container;
 
+	public function addConvertFiles(Tcc\ConvertFileContainerInterface $container)
+	{
+		$this->container = $container;
 	}
 
 	public function getConvertFiles()
 	{
-		return array(
-			new MockConvertFile(),
-			new MockConvertFile(),
-		);
+		$convertFileFoo = new MockConvertFile();
+		$convertFileBar = new MockConvertFile();
+		$convertFileFoo->setExtension('test');
+		$convertFileBar->setExtension('test');
+
+		$this->container->addFile($convertFileFoo);
+		$this->container->addFile($convertFileBar);
 	}
 }

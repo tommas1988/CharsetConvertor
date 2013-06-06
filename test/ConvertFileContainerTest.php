@@ -67,6 +67,7 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 		$aggregate = new MockConvertFileAggregate();
 		$container = new ConvertFileContainer();
 
+		$container->setConvertExtensions(array('test'));
 		$container->addFiles($aggregate);
 		$convertFiles = $container->getConvertFiles();
 		$this->assertEquals(2, count($convertFiles));
@@ -79,7 +80,7 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 		$aggregate      = new MockConvertFileAggregate();
 		$convertFileObj = new MockConvertFile();
 
-		$container->setConvertExtensions(array('php', 'foo'));
+		$container->setConvertExtensions(array('php', 'foo', 'test'));
 		$convertFileObj->setExtension('foo');
 
 		$container->addFile(__FILE__);
