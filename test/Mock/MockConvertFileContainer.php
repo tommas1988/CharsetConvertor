@@ -1,18 +1,25 @@
 <?php
 class MockConvertFileContainer implements Tcc\ConvertFileContainerInterface
 {
-	protected $convertFiles = array();
+	protected $convertFiles      = array();
+	protected $convertExtensions = array();
 
-	public function addFile($convertFile, $inputCharset, $outputCharset)
+	public function addFile($convertFile, $inputCharset = null, $outputCharset = null)
 	{
+		if ($convertFile instanceof Tcc\ConvertFile) {
+			$inputCharset  = $convertFile->getInputCharset();
+			$outputCharset = $convertFile->getOutputCharset();
+			$convertFile   = $convertFile->getPathname();
+		}
+
 		$this->convertFiles[] = array(
 				'name'          => $convertFile,
-				'inputCharset'  => $inputCharset,
-				'outputCharset' => $outputCharset,
+				'input_charset'  => $inputCharset,
+				'output_charset' => $outputCharset,
 			);
 	}
 
-	public function addFiles(ConvertFileAggregateInterface $aggregate)
+	public function addFiles(Tcc\ConvertFileAggregateInterface $aggregate)
 	{
 
 	}
@@ -24,11 +31,11 @@ class MockConvertFileContainer implements Tcc\ConvertFileContainerInterface
 
 	public function setConvertExtensions(array $extensions)
 	{
-
+		$this->convertExtensions = $extensions;
 	}
 
 	public function getConvertExtensions()
 	{
-
+		return $this->convertExtensions;
 	}
 }

@@ -7,9 +7,30 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 	protected $convertFiles       = array();
 	protected $convertAggregates  = array();
 	protected $convertExtensions  = array();
+	protected $convertFileClass;
 
 	protected $loadFinshed        = false;
 	
+	public function setConvertFileClass($class)
+	{
+		if (!is_string($class)) {
+			throw new \Exception('Invalid argument');
+		}
+
+		if (!is_subclass_of($class, 'Tcc\\ConvertFileInterface')) {
+			throw new Exception('The provided class dose not implement Tcc\\ConvertFileInterface or the PHP version is lower than 5.3.7');
+		}
+		$this->convertFileClass = $class;
+	}
+
+	public function getConvertFileClass()
+	{
+		if (!$this->convertFileClass) {
+			$this->setConvertFileClass('Tcc\\ConvertFile');
+		}
+		return $this->convertFileClass;
+	}
+
 	public function addFile($convertFile, $inputCharset = null, $outputCharset = null)
 	{
 		$isConvertFile = false;
@@ -60,15 +81,18 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 			return $this->loadedConvertFiles;
 		}
 
+		$convertFileClass = $this->getConvertFileClass();
+
 		foreach ($this->convertFiles as $convertFile) {
-			$this->loadedConvertFiles[] = new ConvertFile($convertFile['name'], 
-														  $convertFile['input_charset'], 
-														  $convertFile['output_charset']
-													);
+			$this->loadedConvertFiles[] = new $convertFileClass(
+					$convertFile['name'], 
+					$convertFile['input_charset'], 
+					$convertFile['output_charset']
+				);
 		}
 
 		foreach ($this->convertAggregates as $aggregate) {
-			$this->loadedConvertFiles = array_merge($this->loadedConvertFiles, $aggregate->getConvertFiles());
+			$aggregate->getConvertFiles();
 		}
 
 		$this->loadFinshed = true;
@@ -90,7 +114,7 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 		return $this->convertExtensions;
 	}
 
-	public static function conanicalPath($path)
+	public static function canonicalPath($path)
 	{
 		if (!$path = realpath($path)) {
 			throw new \Exception();

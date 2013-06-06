@@ -28,7 +28,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 		return $this->convertDirs;
 	}
 	
-	public function addConvertFiles(ConvertFileContainterInterface $container)
+	public function addConvertFiles(ConvertFileContainerInterface  $container)
 	{
 		$this->container = $container;
 		$convertFiles    = $this->convertFiles;
@@ -56,15 +56,21 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 			return $this->loadedConvertFiles;
 		}
 
+		if (!$this->container) {
+			throw new \Exception('Have not add ConvertFiles');
+		}
+
 		$filters = array(
 			'files'     => $this->filenames,
 			'dirs'      => array(),
-			'extensions' => $this->container->getConvertExtensions(),
 		);
+
 		foreach ($this->convertDirs as $dir) {
-			$iterator = new ConvretDirectoryIterator($dir, $filters);
+			$iterator = new ConvertDirectoryIterator($dir, $filters);
 			foreach (new \RecursiveIteratorIterator($iterator) as $convertFile) {
-				$this->loadedConvertFiles[] = $convertFile;
+				if ($convertFile) {
+					$this->container->addFile($convertFile);
+				}
 			}
 			$filters['dirs'][] = $dir['name'];
 		}
@@ -79,12 +85,12 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 			throw new \Exception();
 		}
 
-		$convertFile = ConvertFileContainer::conanicalPath($option['name']);
-		if (in_array($convertFile ,$this->filenames) {
+		$convertFile = ConvertFileContainer::canonicalPath($option['name']);
+		if (in_array($convertFile ,$this->filenames)) {
 			return ;
 		}
 
-		$inputCharset  = (isset($option['input_charset']) ? $option['input_charset'] : $inputCharset;
+		$inputCharset  = (isset($option['input_charset'])) ? $option['input_charset'] : $inputCharset;
 		$outputCharset = (isset($option['output_charset'])) ? $option['output_charset'] : $outputCharset;
 
 		$this->filenames[] = $convertFile;

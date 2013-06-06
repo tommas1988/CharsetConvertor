@@ -51,16 +51,16 @@ class ConvertFile implements ConvertFileInterface, \IteratorAggregate
 
 	public function getPath()
 	{
-		return $this->fileInfo->getPath();
+		return ConvertFileContainer::canonicalPath($this->fileInfo->getPath());
 	}
 
 	public function getPathname()
 	{
-		return $this->fileInfo->getPathname();
+		return ConvertFileContainer::canonicalPath($this->fileInfo->getPathname());
 	}
 
 	public function getExtension()
 	{
-		return $this->fileInfo->getExtension();
+		return ConvertFileContainer::canonicalExtension($this->fileInfo->getExtension());
 	}
 }

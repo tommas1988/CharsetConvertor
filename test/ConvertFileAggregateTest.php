@@ -2,7 +2,13 @@
 require '../ConvertFileAggregateInterface.php';
 require '../ConvertFileAggregate.php';
 require '../ConvertFileContainerInterface.php';
+require '../ConvertFileContainer.php';
+require '../Iterator/ConvertDirectoryIterator.php';
+require '../ConvertFileInterface.php';
+require '../ConvertFile.php';
 require './Mock/MockConvertFileContainer.php';
+
+use Tcc\ConvertFileAggregate;
 
 class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 {
@@ -17,7 +23,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 			);
 		$expected = array(
 				array(
-						'name'           => static::canonicalPath('./_files_&_dirs/bar.txt');
+						'name'           => static::canonicalPath('./_files_&_dirs/bar.txt'),
 						'input_charset'  => 'foo',
 						'output_charset' => 'bar',
 					),
@@ -67,7 +73,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 				'input_charset'  => 'foo',
 				'output_charset' => 'bar',
 				'dirs' => array(
-						'name' => './_files_&_dirs',
+						array('name' => './_files_&_dirs'),
 					),
 			);
 		$expected = array(
@@ -81,6 +87,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 		$aggregate = new ConvertFileAggregate($convertFiles);
 		$container = new MockConvertFileContainer();
 
+		$container->setConvertExtensions(array('txt'));
 		$aggregate->addConvertFiles($container);
 		$result = $aggregate->getConvertDirs();
 
@@ -93,9 +100,11 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 				'input_charset'  => 'foo',
 				'ouptut_charset' => 'bar',
 				'dirs' => array(
-						'name'           => './_files_&_dirs',
-						'input_charset'  => 'spec_foo',
-						'output_charset' => 'spec_bar',
+						array(
+								'name'           => './_files_&_dirs',
+								'input_charset'  => 'spec_foo',
+								'output_charset' => 'spec_bar',
+							),
 					),
 			);
 		$expected = array(
@@ -109,6 +118,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 		$aggregate = new ConvertFileAggregate($convertFiles);
 		$container = new MockConvertFileContainer();
 
+		$container->setConvertExtensions(array('txt'));
 		$aggregate->addConvertFiles($container);
 		$result = $aggregate->getConvertDirs();
 
@@ -127,12 +137,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 					),
 				'dirs' => array(
 						array(
-								'name'    => './_files_&_dirs',
-								'subdirs' => array(
-										array(
-												'name' => 'foo_dir',
-											),
-									),
+								'name' => './_files_&_dirs',
 							),
 					),
 			);
@@ -143,12 +148,12 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 						'output_charset' => 'bar',
 					),
 				array(
-						'name'           => static::canonicalPath('./_files_&_dirs/foo_dir/sub_foo.txt'),
+						'name'           => static::canonicalPath('./_files_&_dirs/foo.txt'),
 						'input_charset'  => 'foo',
 						'output_charset' => 'bar',
 					),
 				array(
-						'name'           => static::canonicalPath('./_files_&_dirs/foo.txt'),
+						'name'           => static::canonicalPath('./_files_&_dirs/foo_dir/sub_foo.txt'),
 						'input_charset'  => 'foo',
 						'output_charset' => 'bar',
 					),
@@ -157,8 +162,10 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 		$aggregate = new ConvertFileAggregate($convertFiles);
 		$container = new MockConvertFileContainer();
 
+		$container->setConvertExtensions(array('txt'));
 		$aggregate->addConvertFiles($container);
-		$result = array_merge($container->getConvertFiles(), $aggregate->getConvertFiles());
+		$aggregate->getConvertFiles();
+		$result = $container->getConvertFiles();
 
 		$this->assertEquals($expected, $result);
 	}

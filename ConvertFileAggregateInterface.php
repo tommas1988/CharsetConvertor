@@ -3,6 +3,6 @@ namespace Tcc;
 
 interface ConvertFileAggregateInterface
 {
-	public function addConvertFiles(ConvertFileContainer $container);
+	public function addConvertFiles(ConvertFileContainerInterface $container);
 	public function getConvertFiles();
 }

@@ -3,7 +3,7 @@ namespace Tcc;
 
 interface ConvertFileContainerInterface
 {
-	public function addFile($convertFile);
+	public function addFile($convertFile, $inputCharset, $outputCharset);
 	public function addFiles(ConvertFileAggregateInterface $aggregate);
 	public function getConvertFiles();
 	public function setConvertExtensions(array $extensions);
