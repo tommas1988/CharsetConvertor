@@ -5,6 +5,17 @@ class MockConvertFile implements \Tcc\ConvertFileInterface
 	protected $inputCharset;
 	protected $outputCharset;
 	protected $extension;
+	protected $iterator;
+
+	public function setIterator(Iterator $iterator)
+	{
+		$this->iterator = $iterator;
+	}
+
+	public function getIterator()
+	{
+		return $this->iterator;
+	}
 
 	public function setFilename($filename)
 	{

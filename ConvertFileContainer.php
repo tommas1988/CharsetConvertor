@@ -99,6 +99,14 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 		return $this->loadedConvertFiles;
 	}
 
+	public function clearConvertFiles()
+	{
+		$this->loadedConvertFiles = array();
+		$this->convertFiles       = array();
+		$this->convertAggregates  = array();
+		$this->loadFinshed        = false;
+	}
+
 	public function setConvertExtensions(array $convertExtensions)
 	{
 		foreach ($convertExtensions as $extension) {

@@ -13,7 +13,7 @@ class MockConvertFileContainer implements Tcc\ConvertFileContainerInterface
 		}
 
 		$this->convertFiles[] = array(
-				'name'          => $convertFile,
+				'name'           => $convertFile,
 				'input_charset'  => $inputCharset,
 				'output_charset' => $outputCharset,
 			);
@@ -27,6 +27,11 @@ class MockConvertFileContainer implements Tcc\ConvertFileContainerInterface
 	public function getConvertFiles()
 	{
 		return $this->convertFiles;
+	}
+
+	public function clearConvertFiles()
+	{
+		$this->convertFiles = array();
 	}
 
 	public function setConvertExtensions(array $extensions)

@@ -1,7 +1,7 @@
 <?php
 namespace Tcc;
 
-class ConvertFile implements ConvertFileInterface, \IteratorAggregate
+class ConvertFile implements ConvertFileInterface
 {
 	protected $inputCharset;
 	protected $outputCharset;

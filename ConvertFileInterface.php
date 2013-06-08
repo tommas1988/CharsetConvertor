@@ -1,7 +1,9 @@
 <?php
 namespace Tcc;
 
-interface ConvertFileInterface
+use IteratorAggregate;
+
+interface ConvertFileInterface extends IteratorAggregate
 {
 	public function getFilename();
 	public function getInputCharset();

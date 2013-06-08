@@ -9,16 +9,15 @@ class CharsetConvertor
 	protected $convertFileContainer;
 	protected $convertedFiles = array();
 
-	public function __construct(ConvertFileContainer $container = null)
+	public function __construct(ConvertFileContainerInterface $container = null)
 	{
 		if (!$this->checkEnvironment) {
 			throw new \Exception();
 		}
 
-		if (!$container) {
-			$container = new ConvertFileContainer;
+		if ($container) {
+			$this->setConvertFileContainer($container);
 		}
-		$this->setConvertFileContainer($container);
 	}
 
 	public function checkEnvironment()
@@ -26,10 +25,8 @@ class CharsetConvertor
 		return Convertor::checkEnvironment();
 	}
 
-	public function setConvertor($strategy = null)
+	public function setConvertor($strategy)
 	{
-		$strategy = $strategy ?: 'iconv';
-
 		if (is_string($strategy)) {
 			if (!$strategyClass = Convertor::getConvertStrategyClass($strategy)) {
 				throw new \Exception();
@@ -47,51 +44,42 @@ class CharsetConvertor
 	public function getConvertor()
 	{
 		if (!$this->convertor) {
-			$this->setConvertor();
+			$this->setConvertor('iconv');
 		}
 
 		return $this->convertor;
 	}
 
-	public function setConvertFileContainer(ConvertFileContainer $container)
+	public function setConvertFileContainer(ConvertFileContainerInterface $container)
 	{
 		$this->convertFileContainer = $container;
 	}
 
-	public function setConvertFile(ConvertFileContainer $container = null, $convertFile = null)
+	public function getConvertFileContainer()
 	{
-		if ($container === null) {
-			$container = new ConvertFileContainer;
+		if (!$this->convertFileContainer) {
+			$this->setConvertFileContainer(new ConvertFileContainer);
 		}
 
-		if ($convertFile !== null) {
-			$container->addFile($convertFile);
-		}
-
-		$this->setConvertFileContainer($container);
-	}
-
-	public function setConvertFiles(ConvertFileContainer $container = null, array $convertFiles = null)
-	{
-		if ($container === null) {
-			$container = new ConvertFileContainer;
-		}
-
-		if ($convertFiles === null) {
-			$container->addFiles($convertFiles);
-		}
-
-		$this->setConvertFileContainer($container);
+		return $this->convertFileContainer;
 	}
 
 	public function addConvertFile($convertFile, $inputCharset, $outputCharset)
 	{
-		$this->container->addFile()
+		$container = $this->getConvertFileContainer();
+		$container->addFile($convertFile, $inputCharset, $outputCharset);
 	}
 
 	public function addConvertFiles(array $convertFiles)
 	{
-		$this->container->addFiles($convertFiles);
+		$container = $this->getConvertFileContainer();
+		$container->addFiles($convertFiles);
+	}
+
+	public function emptyConvertFiles()
+	{
+		$container = $this->getConvertFileContainer();
+		$container->clearConvertFiles();
 	}
 
 	public function convert()
@@ -104,7 +92,6 @@ class CharsetConvertor
 				$this->convertedFiles[] = $convertFile->getPathname();
 			} catch (\Exception $e) {
 				
-				break;
 			}
 		}
 	}

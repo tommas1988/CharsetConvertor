@@ -2,6 +2,7 @@
 namespace Tcc\Convertor;
 
 use Tcc\Convertor\Strategy\ConvertStrategyInterface;
+use Tcc\ConvertFileInterface;
 
 class Convertor
 {
@@ -18,7 +19,7 @@ class Convertor
 		$this->convertStrategy = $convertStrategy;
 	}
 
-	public function convert(ConvertFile $convertFile)
+	public function convert(ConvertFileInterface $convertFile)
 	{
 		$inputCharset      = $convertFile->getInputCharset();
 		$outputCharset     = $convertFile->getOutputCharset();
