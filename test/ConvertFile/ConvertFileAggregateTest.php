@@ -1,14 +1,18 @@
 <?php
-require '../ConvertFileAggregateInterface.php';
-require '../ConvertFileAggregate.php';
-require '../ConvertFileContainerInterface.php';
-require '../ConvertFileContainer.php';
-require '../Iterator/ConvertDirectoryIterator.php';
-require '../ConvertFileInterface.php';
-require '../ConvertFile.php';
+namespace Test\ConvertFile;
+
+require '../../ConvertFile/ConvertFileAggregateInterface.php';
+require '../../ConvertFile/ConvertFileAggregate.php';
+require '../../ConvertFile/ConvertFileContainerInterface.php';
+require '../../ConvertFile/ConvertFileContainer.php';
+require '../../ConvertFile/Iterator/ConvertDirectoryIterator.php';
+require '../../ConvertFile/ConvertFileInterface.php';
+require '../../ConvertFile/ConvertFile.php';
 require './Mock/MockConvertFileContainer.php';
 
-use Tcc\ConvertFileAggregate;
+use Tcc\ConvertFile\ConvertFileAggregate;
+use PHPUnit_Framework_TestCase;
+use Test\ConvertFile\Mock\MockConvertFileContainer;
 
 class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 {

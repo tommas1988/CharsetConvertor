@@ -1,8 +1,8 @@
 <?php
-namespace Tcc\Iterator;
+namespace Tcc\ConvertFile\Iterator;
 
-use Tcc\ConvertFileContainer;
-use Tcc\ConvertFile;
+use Tcc\ConvertFile\ConvertFileContainer;
+use Tcc\ConvertFile\ConvertFile;
 
 class ConvertDirectoryIterator extends \RecursiveFilterIterator
 {
@@ -91,7 +91,7 @@ class ConvertDirectoryIterator extends \RecursiveFilterIterator
 			throw new \Exception('Invalid argument');
 		}
 
-		if (!is_subclass_of($class, 'Tcc\\ConvertFileInterface')) {
+		if (!is_subclass_of($class, 'Tcc\\ConvertFile\\ConvertFileInterface')) {
 			throw new Exception('The provided class dose not implement Tcc\\ConvertFileInterface or the PHP version is lower than 5.3.7');
 		}
 		$this->convertFileClass = $class;
@@ -100,7 +100,7 @@ class ConvertDirectoryIterator extends \RecursiveFilterIterator
 	public function getConvertFileClass()
 	{
 		if (!$this->convertFileClass) {
-			$this->setConvertFileClass('Tcc\\ConvertFile');
+			$this->setConvertFileClass('Tcc\\ConvertFile\\ConvertFile');
 		}
 		return $this->convertFileClass;
 	}

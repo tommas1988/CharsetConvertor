@@ -1,13 +1,20 @@
 <?php
-require '../ConvertFileContainerInterface.php';
-require '../ConvertFileContainer.php';
-require '../ConvertFileInterface.php';
-require '../ConvertFile.php';
-require '../ConvertFileAggregateInterface.php';
+namespace Test\ConvertFile;
+
+require '../../ConvertFile/ConvertFileContainerInterface.php';
+require '../../ConvertFile/ConvertFileContainer.php';
+require '../../ConvertFile/ConvertFileInterface.php';
+require '../../ConvertFile/ConvertFile.php';
+require '../../ConvertFile/ConvertFileAggregateInterface.php';
 require './Mock/MockConvertFile.php';
 require './Mock/MockConvertFileAggregate.php';
 
-use Tcc\ConvertFileContainer;
+use Tcc\ConvertFile\ConvertFileContainer;
+use PHPUnit_Framework_TestCase;
+use Test\ConvertFile\Mock\MockConvertFile;
+use Test\ConvertFile\Mock\MockConvertFileAggregate;
+use SplFileInfo;
+
 
 class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 {
@@ -91,7 +98,7 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 		$convertFiles = $container->getConvertFiles();
 		$this->assertEquals(5, count($convertFiles));
 		foreach ($convertFiles as $convertFile) {
-			$this->assertInstanceOf('Tcc\\ConvertFileInterface', $convertFile);
+			$this->assertInstanceOf('Tcc\\ConvertFile\\ConvertFileInterface', $convertFile);
 		}
 	}
 

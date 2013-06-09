@@ -1,5 +1,8 @@
 <?php
-namespace Tcc;
+namespace Tcc\ConvertFile;
+
+use Exception;
+use SplFileInfo;
 
 class ConvertFileContainer implements ConvertFileContainerInterface
 {
@@ -14,11 +17,11 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 	public function setConvertFileClass($class)
 	{
 		if (!is_string($class)) {
-			throw new \Exception('Invalid argument');
+			throw new Exception('Invalid argument');
 		}
 
-		if (!is_subclass_of($class, 'Tcc\\ConvertFileInterface')) {
-			throw new Exception('The provided class dose not implement Tcc\\ConvertFileInterface or the PHP version is lower than 5.3.7');
+		if (!is_subclass_of($class, 'Tcc\\ConvertFile\\ConvertFileInterface')) {
+			throw new Exception('The provided class dose not implement Tcc\\ConvertFile\\ConvertFileInterface or the PHP version is lower than 5.3.7');
 		}
 		$this->convertFileClass = $class;
 	}
@@ -26,7 +29,7 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 	public function getConvertFileClass()
 	{
 		if (!$this->convertFileClass) {
-			$this->setConvertFileClass('Tcc\\ConvertFile');
+			$this->setConvertFileClass('Tcc\\ConvertFile\\ConvertFile');
 		}
 		return $this->convertFileClass;
 	}
@@ -36,18 +39,18 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 		$isConvertFile = false;
 
 		if (is_string($convertFile)) {
-			$file = new \SplFileInfo($convertFile);
-		} elseif ($convertFile instanceof \SplFileInfo) {
+			$file = new SplFileInfo($convertFile);
+		} elseif ($convertFile instanceof SplFileInfo) {
 			$file = $convertFile;
 		} elseif ($convertFile instanceof ConvertFileInterface) {
 			$isConvertFile = true;
 			$file          = $convertFile;
 		} else {
-			throw new \Exception();
+			throw new Exception();
 		}
 
 		if (!$isConvertFile && !$file->isReadable()) {
-			throw new \Exception();
+			throw new Exception();
 		}
 
 		$extension = static::canonicalExtension($file->getExtension());
@@ -125,7 +128,7 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 	public static function canonicalPath($path)
 	{
 		if (!$path = realpath($path)) {
-			throw new \Exception();
+			throw new Exception();
 		}
 
 		$path = rtrim(str_replace('\\', '/', $path), '/');

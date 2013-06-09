@@ -1,7 +1,9 @@
 <?php
-namespace Tcc;
+namespace Tcc\ConvertFile;
 
-use Tcc\Iterator\ConvertDirectoryIterator;
+use Tcc\ConvertFile\Iterator\ConvertDirectoryIterator;
+use Exception;
+use RecursiveIteratorIterator;
 
 class ConvertFileAggregate implements ConvertFileAggregateInterface
 {
@@ -57,7 +59,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 		}
 
 		if (!$this->container) {
-			throw new \Exception('Have not add ConvertFiles');
+			throw new Exception('Have not add ConvertFiles');
 		}
 
 		$filters = array(
@@ -67,7 +69,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 
 		foreach ($this->convertDirs as $dir) {
 			$iterator = new ConvertDirectoryIterator($dir, $filters);
-			foreach (new \RecursiveIteratorIterator($iterator) as $convertFile) {
+			foreach (new RecursiveIteratorIterator($iterator) as $convertFile) {
 				if ($convertFile) {
 					$this->container->addFile($convertFile);
 				}
@@ -82,7 +84,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 	protected function resolveFileOption(array $option, $inputCharset, $outputCharset)
 	{
 		if (!isset($option['name'])) {
-			throw new \Exception();
+			throw new Exception();
 		}
 
 		$convertFile = ConvertFileContainer::canonicalPath($option['name']);
@@ -100,7 +102,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 	protected function resolveDirOptions(array $dirOption, $inputCharset = null, $outputCharset = null, $parentDir = null)
 	{
 		if (!isset($dirOption['name'])) {
-			throw new \Exception();
+			throw new Exception();
 		}
 
 		$concatWithParentDir = function($parentDir, $name) {
@@ -135,7 +137,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
 		if (isset($dirOption['files'])) {
 			foreach ($dirOption['files'] as $convertFileOption) {
 				if (!isset($convertFileOption['name'])) {
-					throw new \Exception();
+					throw new Exception();
 				}
 
 				$convertFileOption['name'] = $concatWithParentDir($dirname, $convertFileOption['name']);

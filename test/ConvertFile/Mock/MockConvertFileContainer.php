@@ -1,12 +1,18 @@
 <?php
-class MockConvertFileContainer implements Tcc\ConvertFileContainerInterface
+namespace Test\ConvertFile\Mock;
+
+use Tcc\ConvertFile\ConvertFileContainerInterface;
+use Tcc\ConvertFile\ConvertFileAggregateInterface;
+use Tcc\ConvertFile\ConvertFile;
+
+class MockConvertFileContainer implements ConvertFileContainerInterface
 {
 	protected $convertFiles      = array();
 	protected $convertExtensions = array();
 
 	public function addFile($convertFile, $inputCharset = null, $outputCharset = null)
 	{
-		if ($convertFile instanceof Tcc\ConvertFile) {
+		if ($convertFile instanceof ConvertFile) {
 			$inputCharset  = $convertFile->getInputCharset();
 			$outputCharset = $convertFile->getOutputCharset();
 			$convertFile   = $convertFile->getPathname();
@@ -19,7 +25,7 @@ class MockConvertFileContainer implements Tcc\ConvertFileContainerInterface
 			);
 	}
 
-	public function addFiles(Tcc\ConvertFileAggregateInterface $aggregate)
+	public function addFiles(ConvertFileAggregateInterface $aggregate)
 	{
 
 	}

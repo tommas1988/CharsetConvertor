@@ -1,5 +1,5 @@
 <?php
-namespace Tcc;
+namespace Tcc\ConvertFile;
 
 interface ConvertFileContainerInterface
 {

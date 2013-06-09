@@ -1,5 +1,10 @@
 <?php
-class MockConvertFile implements \Tcc\ConvertFileInterface
+namespace Test\ConvertFile\Mock;
+
+use Tcc\ConvertFile\ConvertFileInterface;
+use Iterator;
+
+class MockConvertFile implements ConvertFileInterface
 {
 	protected $filename;
 	protected $inputCharset;
