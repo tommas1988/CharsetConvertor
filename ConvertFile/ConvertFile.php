@@ -47,7 +47,7 @@ class ConvertFile implements ConvertFileInterface
         $fileInfo = $this->fileInfo;
 
         if ($withoutExtension) {
-            return substr($fileInfo->getFilename(), 0, -strlen($fileInfo->getExtension()) - 1);
+            return substr($fileInfo->getFilename(), 0, -(strlen($fileInfo->getExtension()) + 1));
         }
 
         return $fileInfo->getFilename();
