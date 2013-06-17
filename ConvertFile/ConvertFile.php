@@ -2,7 +2,7 @@
 namespace Tcc\ConvertFile;
 
 use SplFileInfo;
-
+use Exception;
 
 class ConvertFile implements ConvertFileInterface
 {
@@ -10,8 +10,14 @@ class ConvertFile implements ConvertFileInterface
     protected $outputCharset;
     protected $fileInfo;
     
-    public function __construct(SplFileInfo $file, $inputCharset, $outputCharset)
+    public function __construct($file, $inputCharset, $outputCharset)
     {
+        if (is_string($file)) {
+            $file = new SplFileInfo($file);
+        } elseif (!$file instanceof SplFileInfo) {
+            throw new Exception('Invalid argument');
+        }
+
         if (!$file->isFile() || !$file->isReadable()) {
             throw new Exception();
         }
@@ -35,18 +41,13 @@ class ConvertFile implements ConvertFileInterface
     {
         return $this->outputCharset;
     }
-    
-    public function getFileInfo()
-    {
-        return $this->fileInfo;
-    }
 
     public function getFilename($withoutExtension = false)
     {
         $fileInfo = $this->fileInfo;
 
         if ($withoutExtension) {
-            return substr($fileInfo->getFilename(), 0, -strlen($fileInfo->getExtension()));
+            return substr($fileInfo->getFilename(), 0, -strlen($fileInfo->getExtension()) - 1);
         }
 
         return $fileInfo->getFilename();

@@ -63,8 +63,8 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
         }
 
         $filters = array(
-            'files'     => $this->filenames,
-            'dirs'      => array(),
+            'files' => $this->filenames,
+            'dirs'  => array(),
         );
 
         foreach ($this->convertDirs as $dir) {
@@ -99,8 +99,9 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
         $this->container->addFile($convertFile, $inputCharset, $outputCharset);
     }
 
-    protected function resolveDirOptions(array $dirOption, $inputCharset = null, $outputCharset = null, $parentDir = null)
-    {
+    protected function resolveDirOptions(array $dirOption, $inputCharset = null, 
+        $outputCharset = null, $parentDir = null
+    ) {
         if (!isset($dirOption['name'])) {
             throw new Exception();
         }

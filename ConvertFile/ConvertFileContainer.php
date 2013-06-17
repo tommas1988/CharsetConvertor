@@ -90,10 +90,10 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 
         foreach ($this->convertFiles as $convertFile) {
             $this->loadedConvertFiles[] = new $convertFileClass(
-                    $convertFile['name'], 
-                    $convertFile['input_charset'], 
-                    $convertFile['output_charset']
-                );
+                $convertFile['name'], 
+                $convertFile['input_charset'], 
+                $convertFile['output_charset']
+            );
         }
 
         foreach ($this->convertAggregates as $aggregate) {

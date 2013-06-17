@@ -1,5 +1,5 @@
 <?php
-namespace Test\ConvertFile\Mock;
+namespace Tcc\Test\ConvertFile\Mock;
 
 use Tcc\ConvertFile\ConvertFileContainerInterface;
 use Tcc\ConvertFile\ConvertFileAggregateInterface;
@@ -19,10 +19,10 @@ class MockConvertFileContainer implements ConvertFileContainerInterface
         }
 
         $this->convertFiles[] = array(
-                'name'           => $convertFile,
-                'input_charset'  => $inputCharset,
-                'output_charset' => $outputCharset,
-            );
+            'name'           => $convertFile,
+            'input_charset'  => $inputCharset,
+            'output_charset' => $outputCharset,
+        );
     }
 
     public function addFiles(ConvertFileAggregateInterface $aggregate)

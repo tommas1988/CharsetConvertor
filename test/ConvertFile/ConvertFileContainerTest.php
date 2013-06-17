@@ -1,35 +1,33 @@
 <?php
-namespace Test\ConvertFile;
-
-require '../../ConvertFile/ConvertFileContainerInterface.php';
-require '../../ConvertFile/ConvertFileContainer.php';
-require '../../ConvertFile/ConvertFileInterface.php';
-require '../../ConvertFile/ConvertFile.php';
-require '../../ConvertFile/ConvertFileAggregateInterface.php';
-require './Mock/MockConvertFile.php';
-require './Mock/MockConvertFileAggregate.php';
+namespace Tcc\Test\ConvertFile;
 
 use Tcc\ConvertFile\ConvertFileContainer;
 use PHPUnit_Framework_TestCase;
-use Test\ConvertFile\Mock\MockConvertFile;
-use Test\ConvertFile\Mock\MockConvertFileAggregate;
+use Tcc\Test\ConvertFile\Mock\MockConvertFile;
+use Tcc\Test\ConvertFile\Mock\MockConvertFileAggregate;
 use SplFileInfo;
 
 
 class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 {
+    protected $container;
+
+    public function setUp()
+    {
+        $this->container = new ConvertFileContainer();
+    }
+
     public function testAddNotExistsFileThrowException()
     {
         $this->setExpectedException('Exception');
-
-        $container = new ConvertFileContainer();
+        $container = $this->container;
 
         $container->addFile('not_exists_file');
     }
 
     public function testAddFileWithNotAllowedExtension()
     {
-        $container = new ConvertFileContainer();
+        $container = $this->container;
 
         $container->setConvertExtensions(array('txt'));
         $result = $container->addFile(__FILE__);
@@ -39,7 +37,7 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 
     public function testCanAddFileName()
     {
-        $container = new ConvertFileContainer();
+        $container = $this->container;
 
         $container->setConvertExtensions(array('php'));
         $result = $container->addFile(__FILE__);
@@ -49,8 +47,9 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 
     public function testCanAddConvertFileObject()
     {
+        
+        $container   = $this->container;
         $convertFile = new MockConvertFile();
-        $container   = new ConvertFileContainer();
 
         $convertFile->setExtension('foo');
         $container->setConvertExtensions(array('foo'));
@@ -61,8 +60,8 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 
     public function testCanAddSplFileInfo()
     {
+        $container = $this->container;
         $fileInfo  = new SplFileInfo(__FILE__);
-        $container = new ConvertFileContainer();
 
         $container->setConvertExtensions(array('php'));
         $result = $container->addFile($fileInfo);
@@ -71,8 +70,8 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 
     public function testCanAddFiles()
     {
+        $container = $this->container;
         $aggregate = new MockConvertFileAggregate();
-        $container = new ConvertFileContainer();
 
         $container->setConvertExtensions(array('test'));
         $container->addFiles($aggregate);
@@ -82,7 +81,7 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 
     public function testLoadedConvertFilesAreAllConvertFileObject()
     {
-        $container      = new ConvertFileContainer();
+        $container      = $this->container;
         $fileInfo       = new SplFileInfo(__FILE__);
         $aggregate      = new MockConvertFileAggregate();
         $convertFileObj = new MockConvertFile();
@@ -104,9 +103,9 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 
     public function testSetCanonicalConvertExtensions()
     {
+        $container = $this->container;
         $extensions = array('PHP', 'Txt', 'Php');
         $expected   = array('php', 'txt');
-        $container  = new ConvertFileContainer();
 
         $container->setConvertExtensions($extensions);
         $result = $container->getConvertExtensions();

@@ -1,0 +1,7 @@
+<phpunit bootstrap="bootstrap.php">
+    <testsuites>
+        <testsuite mame="Charset Convertor Test Suite">
+            <directory suffix="Test.php">ConvertFile</directory>
+        </testsuite>
+  </testsuites>
+</phpunit>

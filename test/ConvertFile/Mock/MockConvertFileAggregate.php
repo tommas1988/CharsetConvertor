@@ -1,5 +1,5 @@
 <?php
-namespace Test\ConvertFile\Mock;
+namespace Tcc\Test\ConvertFile\Mock;
 
 use Tcc\ConvertFile\ConvertFileAggregateInterface;
 use Tcc\ConvertFile\ConvertFileContainerInterface;

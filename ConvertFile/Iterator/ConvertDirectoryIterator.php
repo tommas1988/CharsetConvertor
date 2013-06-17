@@ -30,8 +30,8 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
         ) {
             $iterator = $convertDirOption['iterator'];
         } elseif (isset($convertDirOption['name']) && is_string($convertDirOption['name'])) {
-            $iterator = new RecursiveDirectoryIterator($convertDirOption['name']);
-            $this->dirname       = $convertDirOption['name'];
+            $iterator      = new RecursiveDirectoryIterator($convertDirOption['name']);
+            $this->dirname = $convertDirOption['name'];
         } else {
             throw new Exception('Invalid argument');
         }
@@ -49,6 +49,7 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
         if ($fileInfo->isFile()) {
             $filename = ConvertFileContainer::canonicalPath($fileInfo->getPathname());
+
             if (in_array($filename, $this->filters['files'])) {
                 return false;
             }
@@ -57,6 +58,7 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
         if ($fileInfo->isDir()) {
             $dirname = ConvertFileContainer::canonicalPath($fileInfo->getPathname());
+
             if (in_array($dirname, $this->filters['dirs'])) {
                 return false;
             }
@@ -70,10 +72,10 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
     public function getChildren()
     {
         $convertDirOption = array(
-                'iterator'       => $this->getInnerIterator()->getChildren(),
-                'input_charset'  => $this->inputCharset,
-                'output_charset' => $this->outputCharset,
-            );
+            'iterator'       => $this->getInnerIterator()->getChildren(),
+            'input_charset'  => $this->inputCharset,
+            'output_charset' => $this->outputCharset,
+        );
 
         return new self($convertDirOption, $this->filters);
     }
@@ -95,7 +97,9 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
         }
 
         if (!is_subclass_of($class, 'Tcc\\ConvertFile\\ConvertFileInterface')) {
-            throw new Exception('The provided class dose not implement Tcc\\ConvertFileInterface or the PHP version is lower than 5.3.7');
+            throw new Exception('The provided class dose not implement '
+                              . 'Tcc\\ConvertFileInterface or the PHP '
+                              . 'version is lower than 5.3.7');
         }
         $this->convertFileClass = $class;
     }
