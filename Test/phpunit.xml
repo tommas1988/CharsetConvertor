@@ -3,5 +3,13 @@
         <testsuite mame="Charset Convertor Test Suite">
             <directory suffix="Test.php">ConvertFile</directory>
         </testsuite>
-  </testsuites>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">../</directory>
+            <exclude>
+                <directory>./</directory>
+            </exclude>
+        </whitelist>
+    </filter>
 </phpunit>

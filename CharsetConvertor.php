@@ -1,7 +1,9 @@
 <?php
 namespace Tcc;
 
-use Tcc\Convertor\Convertor;
+use Tcc\Convertor\AbstractConvertor;
+use Tcc\Convertor\ConvertorFactory;
+use Exception;
 
 class CharsetConvertor
 {
@@ -25,26 +27,24 @@ class CharsetConvertor
         return Convertor::checkEnvironment();
     }
 
-    public function setConvertor($strategy)
+    public function setConvertor($convertor)
     {
-        if (is_string($strategy)) {
-            if (!$strategyClass = Convertor::getConvertStrategyClass($strategy)) {
-                throw new \Exception();
+        if (is_string($convertor)) {
+            if (!$convertorClass = ConvertorFactory::getConvertorClass($convertor)) {
+                throw new Exception();
             }
-            $convertStrategy = new $strategyClass;
-        } elseif ($strategy instanceof ConvertStrategyInterface) {
-            $convertStrategy = $strategy;
+            $this->convertor = new $convertorClass;
+        } elseif ($convertor instanceof AbstractConvertor) {
+            $this->convertor = $convertor;
         } else {
-            throw new \Exception();
+            throw new Exception();
         }
-
-        $this->convertor = new Convertor($convertStrategy);
     }
 
     public function getConvertor()
     {
         if (!$this->convertor) {
-            $this->setConvertor('iconv');
+            $this->setConvertor(ConvertorFactory::factory());
         }
 
         return $this->convertor;
@@ -76,7 +76,7 @@ class CharsetConvertor
         $container->addFiles($convertFiles);
     }
 
-    public function emptyConvertFiles()
+    public function clearConvertFiles()
     {
         $container = $this->getConvertFileContainer();
         $container->clearConvertFiles();
@@ -90,7 +90,7 @@ class CharsetConvertor
             try {
                 $this->convertor->convert($convertFile);
                 $this->convertedFiles[] = $convertFile->getPathname();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 
             }
         }
