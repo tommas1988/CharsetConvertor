@@ -6,7 +6,7 @@ use Exception;
 
 class MbStringConvertor extends AbstractConvertor
 {
-    protected $encodingList;
+    protected $targetFile;
 
     public function getName()
     {
@@ -22,9 +22,13 @@ class MbStringConvertor extends AbstractConvertor
         $targetFile    = $this->getConvertToFile();
 
         $this->setErrorHandler();
+
+        $this->convertFinish = false;
         foreach ($convertFile as $line) {
             $targetFile->fwrite(mb_convert_encoding($line, $outputCharset, $inputCharset));
         }
+        $this->convertFinish = true;
+
         restore_error_handler();
     }
 
@@ -33,6 +37,10 @@ class MbStringConvertor extends AbstractConvertor
         $convertor = $this;
 
         set_error_handler(function ($errno, $errstr) use ($convertor){
+            $convertToFile = $convertor->getConvertToFile();
+            unlink($convertToFile->getPathname());
+
+            $convertor->cleanConvertor();
             throw new ErrorException($errstr, $errno);
         }, E_WARNING);
     }

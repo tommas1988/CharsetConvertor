@@ -9,21 +9,29 @@ class AbstractConvertor
     protected $convertToStrategy;
     protected $convertingFile;
     protected $targetLocation;
+    protected $convertToFile;
+    protected $convertFinish = false;
 
     abstract public function convert(ConvertFileInterface $convertFile);
     abstract public function getName();
 
     public function setTargetLocation($location)
     {
+        $location = str_replace('\\', '/', $location);
+
         if (!is_dir($location)) {
             throw new Exception('Invalid argument');
         }
 
-        $this->targetLocation = static::canonicalLoaction($location);
+        $this->targetLocation = $location;
     }
 
     public function getTargetLocation()
     {
+        if (!$this->targetLocation) {
+            throw new Exception('targetLocation has not set');
+        }
+
         return $this->targetLocation;
     }
 
@@ -48,11 +56,18 @@ class AbstractConvertor
 
     public function getConvertToFile()
     {
-        return $this->getConvertToStrategy()->getConvertToFile();
+        if ($this->convertToFile && !$this->convertFinish) {
+            return $this->convertToFile;
+        }
+
+        $this->convertToFile = $this->getConvertToStrategy()->getConvertToFile();
+        return $this->convertToFile;
     }
 
-    public static function canonicalLoaction($location)
+    public function cleanConvertor()
     {
-
+        $this->convertFinish  = false;
+        $this->convertingFile = null;
+        $this->convertToFile  = null;
     }
 }

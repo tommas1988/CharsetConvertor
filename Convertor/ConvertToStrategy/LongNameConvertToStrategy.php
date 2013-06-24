@@ -6,12 +6,13 @@ class LongNameConvertToStrategy extends AbstractConvertToStrategy
     public function getConvertToFile()
     {
         $convertingFile = $this->convertor->getConvertingFile();
-        $filePathname   = $convertingFile->getPathname();
+        $pathname       = $convertingFile->getPathname();
 
-        $filename = $this->getTargetLocation()
-                  . '/' . str_replace('/', '_', $filePathname);
+        $filename    = preg_replace('/^(\\/|[a-zA-Z]\\:\\/)/', '', $pathname);
+        $newPathname = $this->getTargetLocation()
+                  . '/' . str_replace('/', '_', $filename);
 
-        $fileObject = new SplFileObject($filename, 'w');
+        $fileObject = new SplFileObject($newPathname, 'w');
 
         return $fileObject;
     }
