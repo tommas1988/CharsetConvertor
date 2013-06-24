@@ -10,8 +10,9 @@ class CharsetConvertor
     protected $convertor;
     protected $convertFileContainer;
     protected $convertedFiles = array();
+    protected $targetLocation;
 
-    public function __construct(ConvertFileContainerInterface $container = null)
+    public function __construct($targetLocation = null, ConvertFileContainerInterface $container = null)
     {
         if (!$this->checkEnvironment) {
             throw new \Exception();
@@ -20,6 +21,7 @@ class CharsetConvertor
         if ($container) {
             $this->setConvertFileContainer($container);
         }
+        $this->targetLocation = ($targetLocation) ?: __DIR__;
     }
 
     public function checkEnvironment()
@@ -39,6 +41,8 @@ class CharsetConvertor
         } else {
             throw new Exception();
         }
+
+        $this->convertor->setTargetLocation($this->targetLocation);
     }
 
     public function getConvertor()

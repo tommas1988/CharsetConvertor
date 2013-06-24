@@ -13,22 +13,27 @@ class MbStringConvertor extends AbstractConvertor
         return 'mbstring';
     }
 
-    public function getEncodingList()
-    {
-        if (!$this->encodingList) {
-            $this->encodingList = mb_list_encodings();
-        }
-
-        return $this->encodingList;
-    }
-
     public function convert(ConvertFileInterface $convertFile)
     {
-        $inputCharset  = $this->getCanonicalCharset($convertFile->getInputCharset());
-        $outputCharset = $this->getCanonicalCharset($convertFile->getOutputCharset());
+        $this->convertingFile = $convertFile;
 
+        $inputCharset  = $convertFile->getInputCharset();
+        $outputCharset = $convertFile->getOutputCharset();
+        $targetFile    = $this->getConvertToFile();
+
+        $this->setErrorHandler();
         foreach ($convertFile as $line) {
-
+            $targetFile->fwrite(mb_convert_encoding($line, $outputCharset, $inputCharset));
         }
+        restore_error_handler();
+    }
+
+    protected setErrorHandler()
+    {
+        $convertor = $this;
+
+        set_error_handler(function ($errno, $errstr) use ($convertor){
+            throw new ErrorException($errstr, $errno);
+        }, E_WARNING);
     }
 }

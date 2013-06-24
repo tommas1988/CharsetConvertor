@@ -10,11 +10,6 @@ class RecodeConvertor extends AbstractConvertor
         return 'recode';
     }
 
-    public function getEncodingList()
-    {
-
-    }
-
     public function convert(ConvertFileInterface $convertFile)
     {
 

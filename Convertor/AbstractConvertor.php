@@ -2,54 +2,57 @@
 namespace Tcc\Convertor;
 
 use Tcc\ConvertFile\ConvertFileInterface;
+use Tcc\Convertor\ConvertToStrategyInterface;
 
 class AbstractConvertor
 {
-    protected $charsetsBuffer = array();
+    protected $convertToStrategy;
+    protected $convertingFile;
+    protected $targetLocation;
 
     abstract public function convert(ConvertFileInterface $convertFile);
     abstract public function getName();
-    abstract public function getEncodingList();
-    
-    public function validateEncoding($charsetKey)
+
+    public function setTargetLocation($location)
     {
-        if (!is_string($charsetKey) || ctype_lower($charsetKey)) {
-            throw new Exception('invalid argument');
+        if (!is_dir($location)) {
+            throw new Exception('Invalid argument');
         }
 
-        if (isset($this->charsetsBuffer[$charsetKey])) {
-            return true;
-        }
-
-        $charsets = $this->getEncodingList();
-
-        foreach ($charsets as $key => $charset) {
-            $formated = static::formatCharset($charset);
-            if ($charsetKey === $formated) {
-                $this->charsetsBuffer[$charsetKey] = $formated;
-                return true;
-            }
-        }
-        return false;
+        $this->targetLocation = static::canonicalLoaction($location);
     }
 
-    public function getCanonicalCharset($charset)
+    public function getTargetLocation()
     {
-        $formated = static::formatCharset($charset);
-
-        if ($this->validateEncoding($formated)) {
-            throw new Exception("do not support charset: {$charset}");
-        }
-
-        return $this->charsetsBuffer[$formated];
+        return $this->targetLocation;
     }
 
-    public static function formatCharset($charset)
+    public function getConvertingFile()
     {
-        if (!is_string($charset)) {
-            throw new Exception('invalid argument');
+        return $this->convertingFile;
+    }
+   
+    public function setConvertToStrategy(ConvertToStrategyInterface $strategy)
+    {
+        $this->convertToStrategy = $strategy;
+    }
+
+    public function getConvertToStrategy()
+    {
+        if (!$this->convertToStrategy) {
+            $this->setConvertToStrategy(new LongNameConvertToStrategy($this));
         }
 
-        return strtolower(strtr($charset, '-', ''));
+        return $this->convertToStrategy;
+    }
+
+    public function getConvertToFile()
+    {
+        return $this->getConvertToStrategy()->getConvertToFile();
+    }
+
+    public static function canonicalLoaction($location)
+    {
+
     }
 }

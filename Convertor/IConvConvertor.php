@@ -9,11 +9,6 @@ class IConvConvertor extends AbstractConvertor
     {
         return 'iconv';
     }
-
-    public function getEncodingList()
-    {
-
-    }
     
     public function convert(ConvertFileInterface $convertFile)
     {
