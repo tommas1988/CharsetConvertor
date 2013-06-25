@@ -2,6 +2,7 @@
 namespace Tcc\Convertor;
 
 use ConvertFile\ConvertFileInterface;
+use SplFileObject;
 
 class RecodeConvertor extends AbstractConvertor
 {
@@ -10,8 +11,9 @@ class RecodeConvertor extends AbstractConvertor
         return 'recode';
     }
 
-    public function convert(ConvertFileInterface $convertFile)
-    {
+    protected function doConvert(ConvertFileInterface $convertFile,
+        SplFileObject $convertToFile
+    ){
 
     }
 }

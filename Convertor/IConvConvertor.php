@@ -2,6 +2,7 @@
 namespace Tcc\Convertor;
 
 use ConvertFile\ConvertFileInterface;
+use SplFileObject;
 
 class IConvConvertor extends AbstractConvertor
 {
@@ -10,8 +11,9 @@ class IConvConvertor extends AbstractConvertor
         return 'iconv';
     }
     
-    public function convert(ConvertFileInterface $convertFile)
-    {
+    protected function doConvert(ConvertFileInterface $convertFile,
+        SplFileObject $convertToFile
+    ){
 
     }
 }

@@ -1,11 +1,11 @@
 <?php
 namespace Tcc\Convertor\ConvertToStrategy;
 
-class LongNameConvertToStrategy extends AbstractConvertToStrategy
+class LongNameConvertToStrategy implements ConvertToStrategyInterface
 {
-    public function getConvertToFile()
+    public function getConvertToFile(AbstractConvertor $convertor)
     {
-        $convertingFile = $this->convertor->getConvertingFile();
+        $convertingFile = $convertor->getConvertingFile();
         $pathname       = $convertingFile->getPathname();
 
         $filename    = preg_replace('/^(\\/|[a-zA-Z]\\:\\/)/', '', $pathname);
