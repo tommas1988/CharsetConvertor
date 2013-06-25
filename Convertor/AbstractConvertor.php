@@ -28,6 +28,7 @@ class AbstractConvertor
         }
 
         $this->targetLocation = $location;
+        return $this;
     }
 
     public function getTargetLocation()
@@ -39,6 +40,12 @@ class AbstractConvertor
         return $this->targetLocation;
     }
 
+    public function setConvertingFile(ConvertFileInterface $convertFile)
+    {
+        $this->convertingFile = $convertFile;
+        return $this;
+    }
+
     public function getConvertingFile()
     {
         return $this->convertingFile;
@@ -47,6 +54,7 @@ class AbstractConvertor
     public function setConvertToStrategy(ConvertToStrategyInterface $strategy)
     {
         $this->convertToStrategy = $strategy;
+        return $this;
     }
 
     public function getConvertToStrategy()
@@ -70,7 +78,7 @@ class AbstractConvertor
 
     public function convert(ConvertFileInterface $convertFile)
     {
-        $this->convertingFile = $convertFile;
+        $this->setConvertingFile($convertFile);
         $convertToFile = $this->getConvertToFile();
 
         $this->convertFinish = false;
