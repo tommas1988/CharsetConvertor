@@ -10,14 +10,12 @@ use Exception;
 class AbstractConvertor
 {
     protected $convertToStrategy;
-    protected $convertingFile;
+    protected $convertFile;
     protected $targetLocation;
-    protected $convertToFile;
     protected $convertFinish = false;
 
     abstract public function getName();
-    abstract protected function doConvert(ConvertFileInterface $convertFile,
-        SplFileObject $convertToFile);
+    abstract protected function doConvert();
 
     public function setTargetLocation($location)
     {
@@ -40,13 +38,13 @@ class AbstractConvertor
         return $this->targetLocation;
     }
 
-    public function setConvertingFile(ConvertFileInterface $convertFile)
+    public function setConvertFile(ConvertFileInterface $convertFile)
     {
         $this->convertingFile = $convertFile;
         return $this;
     }
 
-    public function getConvertingFile()
+    public function getConvertFile()
     {
         return $this->convertingFile;
     }
@@ -60,46 +58,37 @@ class AbstractConvertor
     public function getConvertToStrategy()
     {
         if (!$this->convertToStrategy) {
-            $this->setConvertToStrategy(new LongNameConvertToStrategy);
+            $this->setConvertToStrategy(new LongNameConvertToStrategy($this));
         }
 
         return $this->convertToStrategy;
     }
 
-    public function getConvertToFile()
-    {
-        if ($this->convertToFile && !$this->convertFinish) {
-            return $this->convertToFile;
-        }
-
-        $this->convertToFile = $this->getConvertToStrategy()->getConvertToFile($this);
-        return $this->convertToFile;
-    }
-
     public function convert(ConvertFileInterface $convertFile)
     {
-        $this->setConvertingFile($convertFile);
-        $convertToFile = $this->getConvertToFile();
+        $this->setConvertFile($convertFile);
 
         $this->convertFinish = false;
-        $this->doConvert($convertFile, $convertToFile);
+        $this->doConvert();
         $this->convertFinish = true;
     }
 
     public function convertError()
     {
-        if (file_exists($this->convertToFile->getPathname())) {
-            unlink($this->convertToFile->getPathname());
-        }
+        $this->getConvertToStrategy()->restoreConvert();
 
-        $errorMessage = 'Unable to convert file: ' . $this->convertingFile->getFilename()
-                      . ' with input charset: ' . $this->convertingFile->getInputCharset()
-                      . ' and output charset: ' . $this->convertingFile->getOutputCharset();
+        $errorMessage = 'Unable to convert file: ' . $this->convertFile->getFilename()
+                      . ' with input charset: ' . $this->convertFile->getInputCharset()
+                      . ' and output charset: ' . $this->convertFile->getOutputCharset();
 
         $this->convertFinish  = false;
-        $this->convertingFile = null;
-        $this->convertToFile  = null;
+        $this->convertFile = null;
 
         throw new Exception($errorMessage);
+    }
+
+    public function convertFinish()
+    {
+        return (bool) $this->convertFinish;
     }
 }

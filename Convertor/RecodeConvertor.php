@@ -11,9 +11,8 @@ class RecodeConvertor extends AbstractConvertor
         return 'recode';
     }
 
-    protected function doConvert(ConvertFileInterface $convertFile,
-        SplFileObject $convertToFile
-    ){
+    protected function doConvert()
+    {
 
     }
 }

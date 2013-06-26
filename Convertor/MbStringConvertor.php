@@ -12,16 +12,17 @@ class MbStringConvertor extends AbstractConvertor
         return 'mbstring';
     }
 
-    protected function doConvert(ConvertFileInterface $convertFile,
-        SplFileObject $convertToFile
-    ){
-        $inputCharset  = $convertFile->getInputCharset();
-        $outputCharset = $convertFile->getOutputCharset();
+    protected function doConvert()
+    {
+        $convertFile       = $this->getConvertFile();
+        $inputCharset      = $convertFile->getInputCharset();
+        $outputCharset     = $convertFile->getOutputCharset();
+        $convertToStrategy = $this->getConvertToStrategy();
 
         set_error_handler(array($this, 'convertError'), E_WARNING);
 
         foreach ($convertFile as $line) {
-            $convertToFile->fwrite(mb_convert_encoding($line, $outputCharset, $inputCharset));
+            $convertToStrategy->convertTo(mb_convert_encoding($line, $outputCharset, $inputCharset));
         }
 
         restore_error_handler();

@@ -13,9 +13,8 @@ class FooConvertor extends AbstractConvertor
         return 'foo';
     }
 
-    protected function doConvert(ConvertFileInterface $convertFile,
-        SplFileObject $convertToFile
-    ){
+    protected function doConvert()
+    {
         if ($this->triggerError) {
             $this->convertError();
         }
@@ -29,5 +28,10 @@ class FooConvertor extends AbstractConvertor
     public function setConvertFinishFlag($flag)
     {
         $this->convertFinish = (bool) $flag;
+    }
+
+    public function getConvertFinishFlag()
+    {
+        return $this->convertFinish;
     }
 }

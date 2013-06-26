@@ -1,13 +1,19 @@
 <?php
 namespace Tcc\Test\Convertor\Mock;
 
-use Tcc\Convertor\ConvertToStrategy\ConvertToStrategyInterface;
+use Tcc\Convertor\ConvertToStrategy\AbstractConvertToStrategy;
 use Tcc\Convertor\AbstractConvertor;
+use SplFileObject;
 
-class MockConvertToStrategy implements ConvertToStrategyInterface
+class MockConvertToStrategy extends AbstractConvertToStrategy
 {
-    public function getConvertToFile(AbstractConvertor $convertor)
+    public function convertTo($contents)
     {
         
+    }
+
+    protected function getTargetFileName()
+    {
+
     }
 }

@@ -48,20 +48,20 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
         $convertor->getTargetLocation();
     }
 
-    public function testSetConvertingFile()
+    public function testSetConvertFile()
     {
         $convertor = $this->convertor;
 
-        $return = $convertor->setConvertingFile(new MockConvertFile);
+        $return = $convertor->setConvertFile(new MockConvertFile);
         $this->assertSame($convertor, $return);
     }
 
-    public function testGetConvertingFile()
+    public function testGetConvertFile()
     {
         $convertor   = $this->convertor;
         $convertFile = new MockConvertFile;
 
-        $convertor->setConvertingFile($convertFile);
+        $convertor->setConvertFile($convertFile);
         $this->assertSame($convertFile, $convertor->getConvertingFile());
     }
 
@@ -91,8 +91,38 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
             $convertToStrategy);
     }
 
-    public function testGetConvertToFile()
+    public function testConvert()
     {
-        
+        $convertor   = $this->convertor;
+        $convertFile = new MockConvertFile;
+
+        $this->assertFalse($convertor->getConvertFinishFlag());
+        $convertor->convert($convertFile);
+        $this->assertTrue($convertor->getConverFinishFlag());
+    }
+
+    public function testConvertError()
+    {
+        $convertor   = $this->convertor;
+        $convertFile = new MockConvertFile;
+        $convertor->setTriggerConvertErrorFlag(true);
+
+        $this->setExpectedException('Exception');
+        $convertToStrategy = $this->getMockFromAbstract(
+            'Tcc\\Convertor\\ConvertToStrategy\\AbstractConvertToStrategy');
+        $convertToStrategy->expects($this->once())
+                          ->method('restoreConvert');
+                          
+        $convertor->convert($convertFile);
+        $this->assertFalse($convertor->convertFinish());
+        $this->assertNull($convertor->getConvertFile());
+    }
+
+    public function testConvertFinish()
+    {
+        $convertor = $this->convertor;
+
+        $convertor->setConvertFinishFlag(true);
+        $this->assertTrue($convertor->convertFinish());
     }
 }

@@ -11,9 +11,8 @@ class IConvConvertor extends AbstractConvertor
         return 'iconv';
     }
     
-    protected function doConvert(ConvertFileInterface $convertFile,
-        SplFileObject $convertToFile
-    ){
+    protected function doConvert()
+    {
 
     }
 }
