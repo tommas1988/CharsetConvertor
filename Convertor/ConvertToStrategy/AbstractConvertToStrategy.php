@@ -2,15 +2,18 @@
 namespace Tcc\Convertor\ConvertToStrategy;
 
 use Tcc\Convertor\AbstractConvertor;
+use SplFileObject;
+use RuntimeException;
+use Exception;
 
-class AbstractConvertToStrategy
+abstract class AbstractConvertToStrategy
 {
     protected $convertor;
     protected $targetFile;
 
-    abstract protected function generateTargetFileName();
+    abstract public function generateTargetFileName();
 
-    public function __construct(AbstractConvertor $convertor)
+    public function setConvertor(AbstractConvertor $convertor)
     {
         $this->convertor = $convertor;
     }
@@ -19,19 +22,16 @@ class AbstractConvertToStrategy
     {
         $targetFile = $this->getTargateFile();
 
+        if (!$targetFile instanceof SplFileObject) {
+            throw new RuntimeException('invalid targetFile');
+        }
+
         if (!$targetFile->fwrite($contents)) {
             throw new Exception('write contents to target file failed');
         }
     }
-
-    public function restoreConvert()
-    {
-        $targetFile = $this->getTargetFile();
-
-        unlink($targetFile->getRealPath());
-    }
-
-    protected function getTargetFile()
+    
+    public function getTargetFile()
     {
         $convertor = $this->convertor;
 
@@ -39,8 +39,15 @@ class AbstractConvertToStrategy
             return $this->targetFile;
         }
 
-        $filename = $this->getTargetFileName();
+        $filename = $this->generateTargetFileName();
 
         return $this->targetFile = new SplFileObject($filename, 'a');
+    }
+
+    public function restoreConvert()
+    {
+        $targetFile = $this->getTargetFile();
+
+        unlink($targetFile->getRealPath());
     }
 }

@@ -2,12 +2,12 @@
 namespace Tcc\Convertor;
 
 use Tcc\ConvertFile\ConvertFileInterface;
-use Tcc\Convertor\ConvertToStrategy\ConvertToStrategyInterface;
+use Tcc\Convertor\ConvertToStrategy\AbstractConvertToStrategy;
 use Tcc\Convertor\ConvertToStrategy\LongNameConvertToStrategy;
 use SplFileObject;
 use Exception;
 
-class AbstractConvertor
+abstract class AbstractConvertor
 {
     protected $convertToStrategy;
     protected $convertFile;
@@ -19,13 +19,8 @@ class AbstractConvertor
 
     public function setTargetLocation($location)
     {
-        $location = str_replace('\\', '/', $location);
-
-        if (!is_dir($location)) {
-            throw new Exception('Invalid argument');
-        }
-
-        $this->targetLocation = $location;
+        $this->targetLocation = static::canonicalPath($location);
+        
         return $this;
     }
 
@@ -40,18 +35,20 @@ class AbstractConvertor
 
     public function setConvertFile(ConvertFileInterface $convertFile)
     {
-        $this->convertingFile = $convertFile;
+        $this->convertFile = $convertFile;
         return $this;
     }
 
     public function getConvertFile()
     {
-        return $this->convertingFile;
+        return $this->convertFile;
     }
    
-    public function setConvertToStrategy(ConvertToStrategyInterface $strategy)
+    public function setConvertToStrategy(AbstractConvertToStrategy $strategy)
     {
+        $strategy->setConvertor($this);
         $this->convertToStrategy = $strategy;
+        
         return $this;
     }
 
@@ -90,5 +87,15 @@ class AbstractConvertor
     public function convertFinish()
     {
         return (bool) $this->convertFinish;
+    }
+
+    public static function canonicalPath($path)
+    {
+        if (!$path = realpath($path)) {
+            throw new Exception();
+        }
+
+        $path = rtrim(str_replace('\\', '/', $path), '/');
+        return $path;
     }
 }

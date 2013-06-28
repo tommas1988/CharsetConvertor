@@ -7,6 +7,11 @@ class FooConvertToStrategy extends AbstractConvertToStrategy
 {
     protected function getTargetFileName()
     {
-        
+        return 'foo.txt';
+    }
+
+    public function setTargetFile(SplFileObject $targetFile)
+    {
+        $this->targetFile = $targetFile;
     }
 }

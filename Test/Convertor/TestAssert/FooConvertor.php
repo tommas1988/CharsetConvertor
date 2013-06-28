@@ -20,7 +20,7 @@ class FooConvertor extends AbstractConvertor
         }
     }
 
-    public function setTriggerConvertError($flag)
+    public function setTriggerConvertErrorFlag($flag)
     {
         $this->triggerError = (bool) $flag;
     }

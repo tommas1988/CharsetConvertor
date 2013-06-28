@@ -1,15 +1,26 @@
 <?php
 namespace Tcc\Convertor\ConvertToStrategy;
 
+use Tcc\Convertor\AbstractConvertor;
+use Tcc\ConvertFile\ConvertFileInterface;
+use RuntimeException;
+
 class LongNameConvertToStrategy extends AbstractConvertToStrategy
 {
-    protected function generateTargetFileName()
+    public function generateTargetFileName()
     {
         $convertor   = $this->convertor;
         $convertFile = $convertor->getConvertFile();
-        $pathname    = $convertFile->getPathname();
-        $filename    = preg_replace('/^(\\/|[a-zA-Z]\\:\\/)/', '', $pathname);
 
-        return $convertor->getTargetLocation() . '/' . str_replace('/', '_', $filename);
+        if (!$convertFile instanceof ConvertFileInterface) {
+            throw new RuntimeException('Invalid convertFile');
+        }
+
+        $transArr = array('\\' => '_', '/' => '_');
+        $pathname = strtr($convertFile->getPathname(), $transArr);
+
+        $filename = preg_replace('/^(\\_|[a-zA-Z]\\:\\_)/', '', $pathname);
+
+        return $convertor->getTargetLocation() . '/' . $filename;
     }
 }

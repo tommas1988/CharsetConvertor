@@ -7,13 +7,20 @@ use SplFileObject;
 
 class MockConvertToStrategy extends AbstractConvertToStrategy
 {
+    protected $converted;
+
     public function convertTo($contents)
     {
-        
+        $this->converted = $contents;
     }
 
-    protected function getTargetFileName()
+    public function generateTargetFileName()
     {
 
+    }
+
+    public function getConverted()
+    {
+        return $this->converted;
     }
 }

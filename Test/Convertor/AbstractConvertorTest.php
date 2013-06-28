@@ -3,7 +3,7 @@ namespace Tcc\Test\Convertor;
 
 use Tcc\Test\Convertor\TestAssert\FooConvertor;
 use Tcc\Test\Convertor\Mock\MockConvertToStrategy;
-use Tcc\Test\ConvertFile\Mock\MockConvertFile;
+use Tcc\Test\Convertor\Mock\MockConvertFile;
 use PHPUnit_Framework_TestCase;
 
 class AbstractConvertorTest extends PHPUnit_Framework_TestCase
@@ -12,14 +12,14 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $convertor = new FooConvertor;
+        $this->convertor = new FooConvertor;
     }
 
     public function testSetTargetLocation()
     {
         $convertor = $this->convertor;
 
-        $return = $convertor->setTargetLocaion(__DIR__);
+        $return = $convertor->setTargetLocation(__DIR__);
         $this->assertSame($convertor, $return);
     }
 
@@ -62,7 +62,7 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
         $convertFile = new MockConvertFile;
 
         $convertor->setConvertFile($convertFile);
-        $this->assertSame($convertFile, $convertor->getConvertingFile());
+        $this->assertSame($convertFile, $convertor->getConvertFile());
     }
 
     public function testSetConvertToStrategy()
@@ -98,7 +98,7 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
 
         $this->assertFalse($convertor->getConvertFinishFlag());
         $convertor->convert($convertFile);
-        $this->assertTrue($convertor->getConverFinishFlag());
+        $this->assertTrue($convertor->getConvertFinishFlag());
     }
 
     public function testConvertError()
@@ -108,10 +108,12 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
         $convertor->setTriggerConvertErrorFlag(true);
 
         $this->setExpectedException('Exception');
-        $convertToStrategy = $this->getMockFromAbstract(
+        $convertToStrategy = $this->getMock(
             'Tcc\\Convertor\\ConvertToStrategy\\AbstractConvertToStrategy');
         $convertToStrategy->expects($this->once())
                           ->method('restoreConvert');
+
+        $convertor->setConvertToStrategy($convertToStrategy);
                           
         $convertor->convert($convertFile);
         $this->assertFalse($convertor->convertFinish());
