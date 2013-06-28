@@ -55,7 +55,7 @@ abstract class AbstractConvertor
     public function getConvertToStrategy()
     {
         if (!$this->convertToStrategy) {
-            $this->setConvertToStrategy(new LongNameConvertToStrategy($this));
+            $this->setConvertToStrategy(new LongNameConvertToStrategy);
         }
 
         return $this->convertToStrategy;
