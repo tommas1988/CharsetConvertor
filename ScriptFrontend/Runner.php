@@ -175,12 +175,15 @@ class Runner
             $count = 0;
             foreach ($convertInfo->dirs->dir as $convertDirInfo) {
                 $result['dirs'][$count] = $getCommonInfo($convertDirInfo);
+
                 if (isset($convertDirInfo->subdirs)) {
                     $result['dirs'][$count]['subdirs'] = array();
                     foreach ($convertDirInfo->subdirs->subdir as $subDirInfo) {
                         $result['dirs'][$count]['subdirs'][] = $this->resolveConvertInfoFromXML($subdirInfo);
                     }
                 }
+                
+                $count++;
             }
         }
 
