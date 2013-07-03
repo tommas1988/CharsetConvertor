@@ -1,13 +1,25 @@
 <?php
-namespace Tcc\ScriptFrontend;
+namespace Tcc\ScriptFrontend\Printer;
 
-class Printer
+use Tcc\ScriptFrontend\Runner;
+use RuntimeException;
+
+class ConsolePrinter implements PrinterInterface
 {
     protected $runner;
 
-    public function __construct(Runner $runner)
+    public function setAppRunner(Runner $runner)
     {
         $this->runner;
+    }
+
+    public function getAppRunner()
+    {
+        if (!$this->runner) {
+            throw new RuntimeException('You haven`t set a app runner');
+        }
+
+        return $this->runner
     }
 
     public function print($state)
