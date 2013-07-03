@@ -8,6 +8,10 @@ use Exception;
 
 class Runner
 {
+    const PRE_CONVERT  = 0;
+    const CONVERTING   = 1;
+    const CONVERT_POST = 2;
+
     protected $convertor;
     protected $convertFileContainer;
     protected $options = array();

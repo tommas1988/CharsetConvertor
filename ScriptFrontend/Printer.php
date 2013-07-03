@@ -3,10 +3,6 @@ namespace Tcc\ScriptFrontend;
 
 class Printer
 {
-    const PRE_CONVERT  = 0;
-    const CONVERTING   = 1;
-    const CONVERT_POST = 2;
-
     protected $runner;
 
     public function __construct(Runner $runner)
@@ -21,13 +17,13 @@ class Printer
         }
 
         switch ($state) {
-            case static::PRE_CONVERT:
+            case Runner::PRE_CONVERT:
                 $this->printAppHeader();
                 break;
-            case static::CONVERTING:
+            case Runner::CONVERTING:
                 $this->printConvertProcess();
                 break;
-            case static::CONVERT_POST:
+            case Runner::CONVERT_POST:
                 $this->printConvertResult();
                 break;
             default :
