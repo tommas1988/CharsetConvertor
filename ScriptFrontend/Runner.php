@@ -3,29 +3,45 @@ namespace Tcc\ScriptFrontend;
 
 use Tcc\Convertor\AbstractConvertor;
 use Tcc\Convertor\ConvertorFactory;
+use Tcc\Resolver\ResolverUtils as Resolver;
 use Exception;
 
 class Runner
 {
     protected $convertor;
     protected $convertFileContainer;
-    protected $convertedFiles = array();
-    protected $targetLocation;
-
-    public function __construct(array $options)
-    {
-        $this->parseCommand($args);
-    }
+    protected $options = array();
 
     public static function init()
     {
         $args = (isset($argv)) ? $argv ? $_SERVER['argv'];
         $args = array_shift($args);
 
-        return new static($args);
+        $runner = new static;
+        $runner->parseCommand($args);
+
+        return $runner;
     }
 
-    public function parseCommand(array $args)
+    public function setOption($name, $value)
+    {
+        if (!is_string($name)) {
+            throw new InvalidArgumentException('Invalid option name');
+        }
+
+        $this->options[$name] = $value;
+    }
+
+    public function getOption($name, $default = null)
+    {
+        if (!is_string($name)) {
+            throw new InvalidArgumentException('Invalid option name');
+        }
+
+        return (isset($this->options[$name])) ? $this->options[$name] : $default;
+    }
+
+    protected function parseCommand(array $args)
     {
         if (empty($args)) {
             throw new RuntimeException('No argument is provided');
@@ -45,7 +61,7 @@ class Runner
         $count = count($args);
 
         if ($count === 1) {
-            $this->getOptionsFromXml($args[0]);
+            $this->setOptionsFromXml($args[0]);
             return;
         }
 
@@ -59,49 +75,39 @@ class Runner
             throw new InvalidArgumentException('Invalid convert element');
         }
 
-        $this->options['convert_info'] = $convertInfo;
-
         for ($i = 0; $i < $count; $i += 2) {
             $arg = $args[$i];
-            $var = $args[$i + 1];
+            $var = isset($args[$i + 1]) ? $args[$i + 1] : null;
 
             if ($arg === '--convertor' || $arg === '-c') {
-                $this->options['convertor'] = $val;
+                $this->setOption('convertor', $val);
                 break;
             } elseif ($arg === '--convert-to-strategy' || $arg === '-s') {
-                $this->options['convert_to_strategy'] = $val;
+                $this->setOption('convert_to_strategy', $val);
                 break;
             } elseif ($arg === '--target-location' || $arg === 't') {
-                $this->options['target_location'] = $val;
+                $this->setOption('target_location', $val);
                 break;
-            } elseif ($arg === '--base-path' || $arg === 'b') {
-                $this->options['base_path'] = $val;
+            } elseif ($arg === '--base-path' || $arg === '-b') {
+                $this->setOption('base_path', $val);
                 break;
-            } elseif ($arg === '--input-charset' || $arg === 'i') {
-                $this->options['convert_info']['input_charset'] = $val;
+            } elseif ($arg === '--input-charset' || $arg === '-i') {
+                $convertInfo['input_charset'] = $val;
                 break;
-            } elseif ($arg === '--output-charset' || $arg === 'o') {
-                $this->options['convert_info']['output_charset'] = $val;
+            } elseif ($arg === '--output-charset' || $arg === '-o') {
+                $convertInfo['output_charset'] = $val;
                 break;
-            } elseif ($arg === '--verbose' || $arg === 'v') {
-                $this->options['verbose'] = true;
+            } elseif ($arg === '--verbose' || $arg === '-v') {
+                $this->setOption('verbose', true);
                 $i--;
                 break;
             }
         }
+
+        $this->setOption('convert_info', $convertInfo);
     }
 
-    public function showHelpMessage()
-    {
-
-    }
-
-    public function showVersion()
-    {
-
-    }
-
-    public function getOptionsFromXml($configFile)
+    public function setOptionsFromXml($configFile)
     {
         if (!is_string($configFile) || !file_exists($configFile)) {
             throw new InvalidArgumentException('Invalid config file');
@@ -109,11 +115,13 @@ class Runner
 
         $config = new SimpleXMLElement($configFile, 0, true);
 
-        if (!isset($config->convert_info)) {
+        if (isset($config->convert_info)) {
             throw new InvalidArgumentException('The needed convert_info field is not provided');
         }
 
-        $this->options['convert_info'] = $this->resolveConvertInfoFromXml($config->convert_info);
+        $this->setOption(
+            'convert_info',
+            Resolver::resolveConvertInfoFromXml($config->convert_info));
 
         $optionNames = array(
             'converor', 
@@ -125,79 +133,55 @@ class Runner
 
         foreach ($optionNames as $optionName) {
             if (isset($config->$optionName)) {
-                $this->options[$optionName] = $config->$optionName;
+                $this->setOption($optionName, $config->$optionName);
             }
         }
-    }
-
-    protected function resolveConvertInfoFromXML(SimpleXMLElement $convertInfo)
-    {
-        //simply reduce the redundant code
-        $getCommonInfo = function (SimpleXMLElement $info) {
-            if (!isset($info->name)) {
-                throw new InvalidArgumentException('The needed name field is not provided');
-            }
-
-            $result = array();
-
-            $result['name'] = $info->name;
-
-            if (isset($info->input_charset)) {
-                $result['input_charset'] = $info->input_charset;
-            }
-
-            if (isset($info->output_charset)) {
-                $result['output_charset'] = $info->output_charset;
-            }
-
-            return $result;
-        }
-
-        $result = array();
-
-        if (isset($convertInfo->input_charset)) {
-            $result['input_charset'] = $convertInfo->input_charset;
-        }
-
-        if (isset($convertInfo->output_charset)) {
-            $result['output_charset'] = $convertInfo->output_charset;
-        }
-
-        if (isset($convertInfo->files)) {
-            $result['files'] = array();
-            foreach ($convertInfo->files->file as $convertFileInfo) {
-                $result['files'][] = $getCommonInfo($convertFileInfo);
-            }
-        }
-
-        if (isset($convertInfo->dirs)) {
-            $result['dirs'] = array();
-            $count = 0;
-            foreach ($convertInfo->dirs->dir as $convertDirInfo) {
-                $result['dirs'][$count] = $getCommonInfo($convertDirInfo);
-
-                if (isset($convertDirInfo->subdirs)) {
-                    $result['dirs'][$count]['subdirs'] = array();
-                    foreach ($convertDirInfo->subdirs->subdir as $subDirInfo) {
-                        $result['dirs'][$count]['subdirs'][] = $this->resolveConvertInfoFromXML($subdirInfo);
-                    }
-                }
-                
-                $count++;
-            }
-        }
-
-        return $result;
     }
 
     public function run()
     {
-        $options = $this->getOptions;
+        if ($this->getOption('convert_info')) {
+            throw new RuntimeException('You haven`t given the converted files');
+        }
 
+        $this->setUpConvertor();
 
-        //do some setup;
+        $this->addConvertFiles($this->getOption('convert_info'));
+
+        //show app header or other info
 
         $this->convert();
+
+        //show result operation
+    }
+
+    protected function setUpConvertor()
+    {
+        $convertor = $this->getOption('convertor');
+        if (!$this->checkEnvironment($convertor)) {
+            throw new RuntimeException(
+                'Your platform dose not support the convertor you provide or have a available convertor'
+            );
+        }
+
+        if ($convertor) {
+            $this->setConvertor($convertor);
+        }
+
+        $targetLocation = $this->getOption('target_location', getcwd());
+        $this->getConvertor()->setTargetLocation($targetLocation);
+
+        $convertToStrategy = $this->getOption('convert_to_strategy');
+        if ($convertToStrategy
+            && Resolver::resolveClassName('convertor_convert_to_strategy', $convertToStrategy, 'convert_to_strategy')
+        ) {
+            $strategy = new $convertToStrategy;
+            if ($convertToStrategy === 'mirror') {
+                $strategy->setBasePath($this->getOption('base_path'), '');
+            }
+
+            $this->getConvertor()->setConvertToStrategy($strategy);
+        }
     }
 
     public function checkEnvironment($convertor = null)
@@ -217,8 +201,6 @@ class Runner
         } else {
             throw new Exception();
         }
-
-        $this->convertor->setTargetLocation($this->targetLocation);
     }
 
     public function getConvertor()
@@ -277,6 +259,16 @@ class Runner
     }
 
     public function getConvertResult()
+    {
+
+    }
+
+    public function showHelpMessage()
+    {
+
+    }
+
+    public function showVersion()
     {
 
     }
