@@ -49,4 +49,9 @@ class MockConvertFileContainer implements ConvertFileContainerInterface
     {
         return $this->convertExtensions;
     }
+
+    public function count()
+    {
+        
+    }
 }

@@ -104,6 +104,11 @@ class ConvertFileContainer implements ConvertFileContainerInterface
         return $this->loadedConvertFiles;
     }
 
+    public function count()
+    {
+        return count($this->getConvertFiles());
+    }
+
     public function clearConvertFiles()
     {
         $this->loadedConvertFiles = array();

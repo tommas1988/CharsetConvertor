@@ -3,8 +3,15 @@ namespace Tcc\ScriptFrontend;
 
 use Tcc\Convertor\AbstractConvertor;
 use Tcc\Convertor\ConvertorFactory;
+use Tcc\ConvertFile\ConvertFileContainerInterface;
+use Tcc\ConvertFile\ConvertFileContainer;
 use Tcc\Resolver\ResolverUtils as Resolver;
-use Exception;
+use Tcc\ScriptFrontend\Printer\PrinterInterface;
+use Tcc\ScriptFrontend\Printer\ConsolePrinter;
+use SplObjectStorage;
+use SimpleXmlElement;
+use InvalidArgumentException;
+use RuntimeException;
 
 class Runner
 {
@@ -12,37 +19,35 @@ class Runner
     const CONVERTING   = 1;
     const CONVERT_POST = 2;
 
+    const COUNT_ALL       = 0;
+    const COUNT_CONVERTED = 1;
+    const COUNT_FAILURE   = 2;
+    const COUNT_SUCCESS   = 3;
+
+    const VERSION = '1.0.0';
+
     protected $convertor;
     protected $convertFileContainer;
+    protected $printer;
+    protected $convertError;
+    protected $convertFailureCount = 0;
     protected $options = array();
+    protected $resultStorage;
+
+    public function __construct()
+    {
+        $this->resultStorage = new SplObjectStorage;
+    }
 
     public static function init()
     {
-        $args = (isset($argv)) ? $argv ? $_SERVER['argv'];
+        $args = (isset($argv)) ? $argv : $_SERVER['argv'];
         $args = array_shift($args);
 
         $runner = new static;
         $runner->parseCommand($args);
 
         return $runner;
-    }
-
-    public function setOption($name, $value)
-    {
-        if (!is_string($name)) {
-            throw new InvalidArgumentException('Invalid option name');
-        }
-
-        $this->options[$name] = $value;
-    }
-
-    public function getOption($name, $default = null)
-    {
-        if (!is_string($name)) {
-            throw new InvalidArgumentException('Invalid option name');
-        }
-
-        return (isset($this->options[$name])) ? $this->options[$name] : $default;
     }
 
     protected function parseCommand(array $args)
@@ -53,23 +58,22 @@ class Runner
 
         $keys = array_keys($args);
         if (isset($keys['--help'])) {
-            $this->showHelpMessage();
+            ConsolePrinter::printHelpInfo();
             return;
         }
 
         if (isset($keys['--version'])) {
-            $this->showVersion();
+            ConsolePrinter::printVersion();
             return;
         }
 
         $count = count($args);
-
         if ($count === 1) {
             $this->setOptionsFromXml($args[0]);
             return;
         }
 
-        $filename = array_pop($args);
+        $filename    = array_pop($args);
         $convertInfo = array();
         if (is_dir($filename)) {
             $convertInfo['dirs'][] = array('name' => $filename);
@@ -105,6 +109,8 @@ class Runner
                 $this->setOption('verbose', true);
                 $i--;
                 break;
+            } else {
+                ConsolePrinter::printUndefinedCommand($arg);
             }
         }
 
@@ -152,11 +158,30 @@ class Runner
 
         $this->addConvertFiles($this->getOption('convert_info'));
 
-        //show app header or other info
+        $printer = $this->getPrinter();
+        $printer->update(PRE_CONVERT);
 
         $this->convert();
 
-        //show result operation
+        $printer->update(CONVERT_POST);
+    }
+
+    public function setOption($name, $value)
+    {
+        if (!is_string($name)) {
+            throw new InvalidArgumentException('Invalid option name');
+        }
+
+        $this->options[$name] = $value;
+    }
+
+    public function getOption($name, $default = null)
+    {
+        if (!is_string($name)) {
+            throw new InvalidArgumentException('Invalid option name');
+        }
+
+        return (isset($this->options[$name])) ? $this->options[$name] : $default;
     }
 
     protected function setUpConvertor()
@@ -177,7 +202,7 @@ class Runner
 
         $convertToStrategy = $this->getOption('convert_to_strategy');
         if ($convertToStrategy
-            && Resolver::resolveClassName('convertor_convert_to_strategy', $convertToStrategy, 'convert_to_strategy')
+            && Resolver::resolveClassName('convertor_convert_to_strategy', $convertToStrategy . '_convert_to_strategy')
         ) {
             $strategy = new $convertToStrategy;
             if ($convertToStrategy === 'mirror') {
@@ -190,20 +215,19 @@ class Runner
 
     public function checkEnvironment($convertor = null)
     {
-        return Convertor::checkEnvironment($convertor);
+        return ConvertorFactory::checkEnvironment($convertor);
     }
 
     public function setConvertor($convertor)
     {
-        if (is_string($convertor)) {
-            if (!$convertorClass = ConvertorFactory::getConvertorClass($convertor)) {
-                throw new Exception();
-            }
-            $this->convertor = new $convertorClass;
-        } elseif ($convertor instanceof AbstractConvertor) {
+        if (is_string($convertor) && $this->checkEnvironment($convertor)) {
+            $this->convertor = ConvertorFactory::factory($convertor);
+        } elseif ($convertor instanceof AbstractConvertor
+                  && $this->checkEnvironment($convertor)
+        ) {
             $this->convertor = $convertor;
         } else {
-            throw new Exception();
+            throw new InvalidArgumentException('Invalid convertor');
         }
     }
 
@@ -230,6 +254,23 @@ class Runner
         return $this->convertFileContainer;
     }
 
+    public function setPrinter(PrinterInterface $printer)
+    {
+        $printer->setAppRunner($this);
+        $this->printer = $printer;
+
+        return $this;
+    }
+
+    public function getPrinter()
+    {
+        if (!$this->printer) {
+            $this->setPrinter(new ConsolePrinter);
+        }
+
+        return $this->printer;
+    }
+
     public function addConvertFile($convertFile, $inputCharset, $outputCharset)
     {
         $container = $this->getConvertFileContainer();
@@ -253,27 +294,60 @@ class Runner
         $convertFiles = $this->container->getConvertFiles();
 
         foreach ($convertFiles as $convertFile) {
+            //reset convert error flag
+            $this->convertError = false;
+            $errMsg = null;
+
             try {
                 $this->convertor->convert($convertFile);
-                $this->convertedFiles[] = $convertFile->getPathname();
             } catch (Exception $e) {
-                
+                //set convert error flag
+                $this->convertError = true;
+                $this->convertFailureCount++;
+                $errMsg = $e->getMessage();
             }
+
+            $this->setConvertResult($convertFile, $errMsg);
+
+            $this->getPrinter()->update(CONVERTING);
         }
+    }
+
+    public function getConvertErrorFlag()
+    {
+        return $this->convertError;
+    }
+
+    public function convertFileCount($flag = static::COUNT_ALL)
+    {
+        switch ($flag) {
+            case static::COUNT_ALL:
+                return $this->getConvertFileContainer()->count();
+            case static::COUNT_CONVERTED:
+                return count($this->resultStorage);
+            case static::COUNT_FAILURE:
+                return $this->convertFailureCount;
+            case static::COUNT_SUCCESS:
+                return count($this->resultStorage) - $this->convertFailureCount;
+            default :
+                throw new InvalidArgumentException('Invalid count flag');
+        }
+    }
+
+    public function setConvertResult(ConvertFileInterface $convertFile, $errMsg = null)
+    {
+        if (!is_string($errMsg) || $errMsg !== null) {
+            throw new InvalidArgumentException(
+                'Invalid error message type: ' . gettype($errMsg));
+        }
+
+        $this->resultStorage->attach($convertFile, $errMsg);
+
+        return $this;
     }
 
     public function getConvertResult()
     {
-
-    }
-
-    public function showHelpMessage()
-    {
-
-    }
-
-    public function showVersion()
-    {
-
+        return $this->resultStorage;
     }
 }

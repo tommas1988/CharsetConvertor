@@ -9,6 +9,7 @@ class ResolverUtils
         'convertor'                     => 'Tcc\\Convertor',
         'convertor_convert_to_strategy' => 'Tcc\\Convertor\\ConvertToStrategy',
         'script_frontend'               => 'Tcc\\ScriptFrontend',
+        'script_frontend_printer'       => 'Tcc\\ScriptFrontend\\Printer',
     );
 
     public static function resolveConvertInfoFromXML(SimpleXMLElement $convertInfo)
@@ -60,7 +61,7 @@ class ResolverUtils
                 if (isset($convertDirInfo->subdirs)) {
                     $result['dirs'][$count]['subdirs'] = array();
                     foreach ($convertDirInfo->subdirs->subdir as $subDirInfo) {
-                        $result['dirs'][$count]['subdirs'][] = $this->resolveConvertInfoFromXML($subdirInfo);
+                        $result['dirs'][$count]['subdirs'][] = static::resolveConvertInfoFromXML($subdirInfo);
                     }
                 }
                 
@@ -71,9 +72,9 @@ class ResolverUtils
         return $result;
     }
 
-    public static function resolveClassName($nsIdentifier, $name, $suffix)
+    public static function resolveClassName($nsIdentifier, $name)
     {
-        if (!isset(static::namespaces[$nsIdentifier])) {
+        if (!isset(static::$namespaces[$nsIdentifier])) {
             throw new InvalidArgumentException('Invalid namespace identifier');
         }
 
@@ -81,8 +82,8 @@ class ResolverUtils
             return strtr(ucwords(strtr($name, '_', ' ')), ' ', '');
         };
 
-        $namespace = $this->namespaces[$nsIdentifier];
-        $className = $namespace . '//' . canonicalName($name . '_' . $suffix);
+        $namespace = static::$namespaces[$nsIdentifier];
+        $className = $namespace . '//' . canonicalName($name);
 
         return (class_exists($className)) ? $className : false;
     }

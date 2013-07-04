@@ -7,5 +7,5 @@ interface PrinterInterface
 {
     public function setAppRunner(Runner $runer);
     public function getAppRunner();
-    public function print($state);
+    public function update($state);
 }

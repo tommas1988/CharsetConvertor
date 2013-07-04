@@ -76,7 +76,18 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
         $container->setConvertExtensions(array('test'));
         $container->addFiles($aggregate);
         $convertFiles = $container->getConvertFiles();
-        $this->assertEquals(2, count($convertFiles));
+    }
+
+    public function testCount()
+    {
+        $container = $this->container;
+        $aggregate = new MockConvertFileAggregate();
+
+        $container->setConvertExtensions(array('test'));
+        $container->addFiles($aggregate);
+        $convertFiles = $container->getConvertFiles();
+
+        $this->assertSame(2, $container->count());
     }
 
     public function testLoadedConvertFilesAreAllConvertFileObject()
