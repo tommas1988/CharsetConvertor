@@ -56,7 +56,9 @@ class ConvertFileContainer implements ConvertFileContainerInterface
         }
 
         $extension = static::canonicalExtension($file->getExtension());
-        if (!in_array($extension, $this->getConvertExtensions())) {
+        if ($this->getConvertExtensions() === null
+            || !in_array($extension, $this->getConvertExtensions())
+        ) {
             unset($file, $convertFile);
             return false;
         }
@@ -117,14 +119,22 @@ class ConvertFileContainer implements ConvertFileContainerInterface
         $this->loadFinshed        = false;
     }
 
-    public function setConvertExtensions(array $convertExtensions)
+    public function setConvertExtensions(array $convertExtensions = null)
     {
+        if ($convertExtensions === null) {
+            $this->convertExtensions = null;
+
+            return $this;
+        }
+
         foreach ($convertExtensions as $extension) {
             $extension = static::canonicalExtension($extension);
             if (!in_array($extension, $this->convertExtensions)) {
                 $this->convertExtensions[] = $extension;
             }
         }
+
+        return $this;
     }
 
     public function getConvertExtensions()

@@ -24,7 +24,7 @@ class Runner
     const COUNT_FAILURE   = 2;
     const COUNT_SUCCESS   = 3;
 
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.0-alpha';
 
     protected $convertor;
     protected $convertFileContainer;
@@ -109,6 +109,9 @@ class Runner
                 $this->setOption('verbose', true);
                 $i--;
                 break;
+            } elseif ($arg === '--extension' || $arg === '-e') {
+                $this->setOption('extension', explode(',', $val));
+                break;
             } else {
                 ConsolePrinter::printUndefinedCommand($arg);
             }
@@ -145,6 +148,14 @@ class Runner
             if (isset($config->$optionName)) {
                 $this->setOption($optionName, $config->$optionName);
             }
+        }
+
+        if (isset($config->extensions)) {
+            $extensions = array();
+            foreach ($config->extensions->extension as $extension) {
+                $extensions[] = $extension;
+            }
+            $this->setOption('extension', $extensions);
         }
     }
 
@@ -242,7 +253,10 @@ class Runner
 
     public function setConvertFileContainer(ConvertFileContainerInterface $container)
     {
+        $container->setConvertExtensions($this->getOption('extension'));
         $this->convertFileContainer = $container;
+
+        return $this;
     }
 
     public function getConvertFileContainer()
@@ -318,7 +332,7 @@ class Runner
         return $this->convertError;
     }
 
-    public function convertFileCount($flag = static::COUNT_ALL)
+    public function convertFileCount($flag = 0)
     {
         switch ($flag) {
             case static::COUNT_ALL:
