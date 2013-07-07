@@ -21,10 +21,8 @@ class ResolverUtilsTest extends PHPUnit_Framework_TestCase
         $dom = new DOMDocument('1.0', 'utf-8');
         $dom->load(realpath('./Resolver/_files/convert_info.xml'));
 
-        $xpath = new DOMXPath($dom);
-        $name  = $xpath->query('//convert_info/files/file/name')->item(0);
-
-        $dom->removeChild($name);
+        $file = $dom->getElementsByTagName('file')->item(0);
+        $file->removeChild($file->firstChild->nextSibling);
 
         return array(
             array(simplexml_import_dom($dom)),

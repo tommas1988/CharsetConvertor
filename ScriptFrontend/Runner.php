@@ -146,14 +146,14 @@ class Runner
 
         foreach ($optionNames as $optionName) {
             if (isset($config->$optionName)) {
-                $this->setOption($optionName, $config->$optionName);
+                $this->setOption($optionName, (string) $config->$optionName);
             }
         }
 
         if (isset($config->extensions)) {
             $extensions = array();
             foreach ($config->extensions->extension as $extension) {
-                $extensions[] = $extension;
+                $extensions[] = (string) $extension;
             }
             $this->setOption('extension', $extensions);
         }
@@ -170,11 +170,11 @@ class Runner
         $this->addConvertFiles($this->getOption('convert_info'));
 
         $printer = $this->getPrinter();
-        $printer->update(PRE_CONVERT);
+        $printer->update(static::PRE_CONVERT);
 
         $this->convert();
 
-        $printer->update(CONVERT_POST);
+        $printer->update(static::CONVERT_POST);
     }
 
     public function setOption($name, $value)
@@ -213,7 +213,9 @@ class Runner
 
         $convertToStrategy = $this->getOption('convert_to_strategy');
         if ($convertToStrategy
-            && Resolver::resolveClassName('convertor_convert_to_strategy', $convertToStrategy . '_convert_to_strategy')
+            && Resolver::resolveClassName(
+                'convertor_convert_to_strategy',
+                $convertToStrategy . '_convert_to_strategy')
         ) {
             $strategy = new $convertToStrategy;
             if ($convertToStrategy === 'mirror') {
@@ -234,7 +236,7 @@ class Runner
         if (is_string($convertor) && $this->checkEnvironment($convertor)) {
             $this->convertor = ConvertorFactory::factory($convertor);
         } elseif ($convertor instanceof AbstractConvertor
-                  && $this->checkEnvironment($convertor)
+            && $this->checkEnvironment($convertor)
         ) {
             $this->convertor = $convertor;
         } else {
@@ -323,7 +325,7 @@ class Runner
 
             $this->setConvertResult($convertFile, $errMsg);
 
-            $this->getPrinter()->update(CONVERTING);
+            $this->getPrinter()->update(static::CONVERTING);
         }
     }
 
