@@ -30,6 +30,7 @@ class Runner
     protected $convertFileContainer;
     protected $printer;
     protected $convertError;
+    protected $isHalt = false;
     protected $convertFailureCount = 0;
     protected $options = array();
     protected $resultStorage;
@@ -39,11 +40,8 @@ class Runner
         $this->resultStorage = new SplObjectStorage;
     }
 
-    public static function init()
+    public static function init(array $args)
     {
-        $args = (isset($argv)) ? $argv : $_SERVER['argv'];
-        $args = array_shift($args);
-
         $runner = new static;
         $runner->parseCommand($args);
 
@@ -59,11 +57,15 @@ class Runner
         $keys = array_keys($args);
         if (isset($keys['--help'])) {
             ConsolePrinter::printHelpInfo();
+            $this->isHalt = true;
+
             return;
         }
 
         if (isset($keys['--version'])) {
             ConsolePrinter::printVersion();
+            $this->isHalt = true;
+
             return;
         }
 
@@ -78,7 +80,7 @@ class Runner
         if (is_dir($filename)) {
             $convertInfo['dirs'][] = array('name' => $filename);
         } elseif (is_file($filename)) {
-            $convertInfo['file'][] = array('name' => $filename);
+            $convertInfo['files'][] = array('name' => $filename);
         } else {
             throw new InvalidArgumentException('Invalid convert element');
         }
@@ -93,7 +95,7 @@ class Runner
             } elseif ($arg === '--convert-to-strategy' || $arg === '-s') {
                 $this->setOption('convert_to_strategy', $val);
                 break;
-            } elseif ($arg === '--target-location' || $arg === 't') {
+            } elseif ($arg === '--target-location' || $arg === '-t') {
                 $this->setOption('target_location', $val);
                 break;
             } elseif ($arg === '--base-path' || $arg === '-b') {
@@ -110,10 +112,12 @@ class Runner
                 $i--;
                 break;
             } elseif ($arg === '--extension' || $arg === '-e') {
-                $this->setOption('extension', explode(',', $val));
+                $this->setOption('extensions', explode(',', $val));
                 break;
             } else {
                 ConsolePrinter::printUndefinedCommand($arg);
+                $this->ishalt = true;
+                return ;
             }
         }
 
@@ -141,7 +145,6 @@ class Runner
             'convert_to_strategy',
             'target_location',
             'base_path',
-            'verbose',
         );
 
         foreach ($optionNames as $optionName) {
@@ -150,17 +153,25 @@ class Runner
             }
         }
 
+        if (isset($config->verbose)) {
+            $this->setOption('verbose', (bool) (string) $config->verbose);
+        }
+
         if (isset($config->extensions)) {
             $extensions = array();
             foreach ($config->extensions->extension as $extension) {
                 $extensions[] = (string) $extension;
             }
-            $this->setOption('extension', $extensions);
+            $this->setOption('extensions', $extensions);
         }
     }
 
     public function run()
     {
+        if ($this->isHalt) {
+            return ;
+        }
+
         if ($this->getOption('convert_info')) {
             throw new RuntimeException('You haven`t given the converted files');
         }
@@ -184,6 +195,7 @@ class Runner
         }
 
         $this->options[$name] = $value;
+        return $this;
     }
 
     public function getOption($name, $default = null)
@@ -193,6 +205,18 @@ class Runner
         }
 
         return (isset($this->options[$name])) ? $this->options[$name] : $default;
+    }
+
+    public function setOptions(array $options)
+    {
+        $this->setOptions = $options;
+
+        return $this;
+    }
+
+    public function getOptions()
+    {
+        return $this->options;
     }
 
     protected function setUpConvertor()
@@ -233,15 +257,15 @@ class Runner
 
     public function setConvertor($convertor)
     {
-        if (is_string($convertor) && $this->checkEnvironment($convertor)) {
+        if (is_string($convertor)) {
             $this->convertor = ConvertorFactory::factory($convertor);
-        } elseif ($convertor instanceof AbstractConvertor
-            && $this->checkEnvironment($convertor)
-        ) {
+        } elseif ($convertor instanceof AbstractConvertor) {
             $this->convertor = $convertor;
         } else {
             throw new InvalidArgumentException('Invalid convertor');
         }
+
+        return $this;
     }
 
     public function getConvertor()
@@ -255,7 +279,7 @@ class Runner
 
     public function setConvertFileContainer(ConvertFileContainerInterface $container)
     {
-        $container->setConvertExtensions($this->getOption('extension'));
+        $container->setConvertExtensions($this->getOption('extensions'));
         $this->convertFileContainer = $container;
 
         return $this;
@@ -291,18 +315,24 @@ class Runner
     {
         $container = $this->getConvertFileContainer();
         $container->addFile($convertFile, $inputCharset, $outputCharset);
+
+        return $this;
     }
 
     public function addConvertFiles(array $convertFiles)
     {
         $container = $this->getConvertFileContainer();
         $container->addFiles($convertFiles);
+
+        return $this;
     }
 
     public function clearConvertFiles()
     {
         $container = $this->getConvertFileContainer();
         $container->clearConvertFiles();
+
+        return $this;
     }
 
     public function convert()
