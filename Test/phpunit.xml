@@ -2,8 +2,8 @@
 <phpunit bootstrap="bootstrap.php">
   <testsuites>
     <testsuite mame="Charset Convertor Test Suite">
-      <!--<directory suffix="Test.php">ConvertFile</directory>-->
-      <!--<directory suffix="Test.php">Convertor</directory>-->
+      <directory suffix="Test.php">ConvertFile</directory>
+      <directory suffix="Test.php">Convertor</directory>
       <directory suffix="Test.php">Resolver</directory>
       <!--<directory suffix="Test.php">./</directory>-->
     </testsuite>

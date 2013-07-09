@@ -337,7 +337,7 @@ class Runner
 
     public function convert()
     {
-        $convertFiles = $this->container->getConvertFiles();
+        $convertFiles = $this->getConvertFileContainer()->getConvertFiles();
 
         foreach ($convertFiles as $convertFile) {
             //reset convert error flag

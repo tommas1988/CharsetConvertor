@@ -3,6 +3,7 @@ namespace Tcc\Test\ScriptFrontend;
 
 use Tcc\ScriptFrontend\Runner;
 use Tcc\ScriptFrontend\Printer\ConsolePrinter;
+use Tcc\Convertor\ConvertorFactory;
 use PHPUnit_Framework_TestCase;
 
 class RunnerTest extends PHPUnit_Framework_TestCase
@@ -225,5 +226,162 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(getcwd(), $convertor->getTargetLocation());
         $this->assertInstanceOf('Tcc\\Convertor\\ConvertToStrategy\\LongNameConvertToStrategy',
             $convertor->getConvertToStrategy);
+    }
+
+    public function testSetConvertorWithStringArgument()
+    {
+        $convertor = 'mbstring';
+
+        if (!in_array($convertor, get_loaded_extensions())) {
+            $this->fail(
+                'Can not finish this test, cause your platform dose not have mbstring extension');
+
+            return ;
+        }
+
+        $runner = new Runner;
+        $result = $runner->setConvertor($convertor);
+
+        $this->assertSame($runner, $result);
+        $this->assertInstanceOf('Tcc\\Convertor\\MbStringConvertor', $runner->getConvertor());
+    }
+
+    public function testSetConvertorWithAbstractConvertorArgument()
+    {
+        $mockConvertor = $this->getMockForAbstract('Tcc\\Convertor\\AbstractConvertor');
+
+        $runner = new Runner;
+        $result = $runner->setConvertor($mockConvertor);
+
+        $this->assertSame($runner, $result);
+        $this->assertInstanceOf('Tcc\\Convertor\\AbstractConvertor', $mockConvertor);
+    }
+
+    public function testSetConvertorWillRaiseExceptionIfArgumentIsNotStringOrAbstractConvertor()
+    {
+        $this->setExpectedException('InvalidArgumentExceprion');
+
+        $runner = new Runner;
+        $runner->setConvertor(false);
+    }
+
+    public function testGetConvertorTryToSetOneIfConvertorNotSetBefore()
+    {
+        $convertors = ConvertorFactory::getAvailableConvertor();
+
+        if (!$convertors) {
+            $this->fail('No available convertor on your platform to finish this test');
+            return ;
+        }
+
+        $convertor = array_pop($convertors);
+        $runner    = new Runner;
+
+        $this->assertInstanceOf($convertor, $runner->getConvertor());
+    }
+
+    public function testSetConvertFileContainer()
+    {
+        $extensions = array('php', 'txt');
+
+        $mockContainer = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+
+        $mockContainer->expects($this->once())
+                      ->method('setConvertExtensions')
+                      ->with($this->EqualTo($extensions));
+
+        $runner = new Runner;
+        $runner->setOption('extensions', $extensions);
+        $result = $runner->setConvertFileContainer($mockContainer);
+
+        $this->assertSame($runner, $result);
+        $this->assertInstanceOf('Tcc\\ConvertFile\\ConvertFileContainerInterface',
+            $runner->getConvertFileContainer());
+    }
+
+    public function testGetConvertFileContainerWillReturnDefaultIfNotSetBefore()
+    {
+        $runner = new Runner;
+
+        $this->assertInstanceOf('Tcc\\ConvertFile\\ConvertFileContainer',
+            $runner->getConvertFileContainer());
+    }
+
+    public function testSetPrinter()
+    {
+        $runner  = new Runner;
+        $printer = $this->getMock('Tcc\\Test\\ScriptFrontend\\TestAssert\\FooPrinter');
+
+        $printer->expects($this->once())
+                ->method('setAppRunner')
+                ->with($this->identicalTo($runner));
+
+        $result = $runner->setPrinter($printer);
+
+        $this->assertSame($runner, $result);
+        $this->assertInstanceOf('Tcc\\ScriptFrontend\\Printer\\PrinterInterface',
+            $runner->getPrinter());
+    }
+
+    public function testGetPrinterWillSetConsolePrinterIfNotSetBefore()
+    {
+        $runner = new Runner;
+
+        $this->assertInstanceOf('Tcc\\ScriptFrontend\\Printer\\ConsolePrinter',
+            $runner->getPrinter());
+    }
+
+    public function testAddConvertFile()
+    {
+        $convertFile   = 'convert-file';
+        $inputCharset  = 'utf-8';
+        $outputCharset = 'ansi';
+
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+
+        $container->expects($this->once())
+                  ->method('addFile')
+                  ->with($this->EqualTo($convertFile),
+                        $this->EqualTo($inputCharset)
+                        $this->EqualTo($outputCharset));
+
+        $runner = new Runner;
+        $runner->setConvertFileContainer($container);
+
+        $runner->addConvertFile($convertFile, $inputCharset, $outputCharset);
+    }
+
+    public function testAddConvertFiles()
+    {
+        $convertFiles = array('convert-files');
+
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+
+        $container->expects($this->once())
+                  ->method('addFiles')
+                  ->with($this->EqualTo($convertFiles));
+
+        $runner = new Runner;
+        $runner->setConvertFileContainer($container);
+
+        $runner->addConvertFiles($convertFiles);
+    }
+
+    public function testClearConvertFile()
+    {
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+
+        $container->expects($this->once())
+                  ->method('clearConvertFiles')
+
+        $runner = new Runner;
+        $runner->setConvertFileContainer($container);
+
+        $runner->clearConvertFiles();
+    }
+
+    public function testConvert()
+    {
+        
     }
 }

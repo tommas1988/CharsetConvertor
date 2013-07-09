@@ -56,8 +56,8 @@ class ConvertFileContainer implements ConvertFileContainerInterface
         }
 
         $extension = static::canonicalExtension($file->getExtension());
-        if ($this->getConvertExtensions() === null
-            || !in_array($extension, $this->getConvertExtensions())
+        if ($this->getConvertExtensions() !== null
+            && !in_array($extension, $this->getConvertExtensions())
         ) {
             unset($file, $convertFile);
             return false;

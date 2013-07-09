@@ -34,6 +34,16 @@ class MockConvertFile implements ConvertFileInterface
         return $this->outputCharset;
     }
 
+    public function getPathname()
+    {
+
+    }
+
+    public function getPath()
+    {
+        
+    }
+
     public function getExtension()
     {
 
