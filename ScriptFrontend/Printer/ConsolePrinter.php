@@ -3,6 +3,7 @@ namespace Tcc\ScriptFrontend\Printer;
 
 use Tcc\ScriptFrontend\Runner;
 use RuntimeException;
+use InvalidArgumentException;
 
 class ConsolePrinter implements PrinterInterface
 {
@@ -10,7 +11,9 @@ class ConsolePrinter implements PrinterInterface
 
     public function setAppRunner(Runner $runner)
     {
-        $this->runner;
+        $this->runner = $runner;
+
+        return $this;
     }
 
     public function getAppRunner()
@@ -74,17 +77,20 @@ class ConsolePrinter implements PrinterInterface
 
     protected function printConvertProcess()
     {
-        $runer = $this->getAppRunner();
+        $runner = $this->getAppRunner();
 
         $totalCount    = $runner->convertFileCount(Runner::COUNT_ALL);
         $convertResult = $runner->getConvertResult();
 
         $states = '';
-        foreach ($convertResult as $result) {
-            $states .= ($state === null) ? '#' : '-';
+
+        $convertResult->rewind();
+        while ($convertResult->valid()) {
+            $states .= ($convertResult->getInfo() === null) ? '#' : '-';
+            $convertResult->next();
         }
 
-        printf("\r[%-{$totalCount}s] %d/%d", $states, count($convertedFiles), $totalCount);
+        printf("\r[%-{$totalCount}s] %d/%d", $states, count($convertResult), $totalCount);
     }
 
     protected function printConvertResult()
@@ -94,13 +100,16 @@ class ConsolePrinter implements PrinterInterface
         $results = '';
         if ($runner->getOption('verbose')) {
             $results = "\n";
-            foreach ($runner->getConvertResult() as $convertFile => $errMsg) {
+            $resultStorage = $runner->getConvertResult();
+            foreach ($resultStorage as $convertFile) {
                 $results .= "\nFile name: " . $convertFile->getFilename()
                           . " path: " . $convertFile->getPath()
                           . " input charset: " . $convertFile->getInputCharset()
                           . " output charset: " . $convertFile->getOutputCharset();
+
+                $errMsg = $resultStorage->getInfo();
                 if ($errMsg !== null) {
-                    $results .= "Error: {$errMsg}";
+                    $results .= "\nError: {$errMsg}";
                 }
             }
         }

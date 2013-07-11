@@ -4,6 +4,10 @@ namespace Tcc\Test\ScriptFrontend;
 use Tcc\ScriptFrontend\Runner;
 use Tcc\ScriptFrontend\Printer\ConsolePrinter;
 use Tcc\Convertor\ConvertorFactory;
+use Tcc\ConvertFile\ConvertFileAggregate;
+use Tcc\Test\ScriptFrontend\TestAssert\FooConvertFile;
+use Tcc\Test\ScriptFrontend\TestAssert\FooConvertor;
+use Tcc\Test\ScriptFrontend\TestAssert\FooPrinter;
 use PHPUnit_Framework_TestCase;
 
 class RunnerTest extends PHPUnit_Framework_TestCase
@@ -47,7 +51,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase
 
     public function testParseCommandWillStopAtUndefinedCommand()
     {
-        $args    = array('undefined-command', 'foo');
+        $args    = array('undefined-command', __FILE__);
         $expects = 'Unrecognize command: undefined-command';
 
         ob_start();
@@ -57,16 +61,10 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $this->assertSame($expects, $actual);
     }
 
-    public function testParseCommandWillTrggerSetOptionsFromXmlIfOnlyOneArgumentIsPass()
+    public function testParseCommandWillTriggerSetOptionsFromXmlIfOnlyOneArgumentIsPass()
     {
         $args    = array('./ScriptFrontend/_files/config.xml');
         $expects = array(
-            'convertor'           => 'mbstring',
-            'convert_to_strategy' => 'long_name',
-            'target_locaiton'     => 'target-lovation',
-            'base_path'           => 'base-path',
-            'verbose'             => true,
-            'extesions'           => array('php', 'txt'),
             'convert_info' => array(
                 'input_charset'  => 'g-utf8',
                 'output_charset' => 'g-ansi',
@@ -81,9 +79,15 @@ class RunnerTest extends PHPUnit_Framework_TestCase
                     ),
                 ),
             ),
+            'convertor'           => 'mbstring',
+            'convert_to_strategy' => 'long_name',
+            'target_location'     => 'target-location',
+            'base_path'           => 'base-path',
+            'verbose'             => true,
+            'extensions'          => array('php', 'txt'),
         );
 
-        Runner::init($args);
+        $runner = Runner::init($args);
 
         $this->assertEquals($expects, $runner->getOptions());
     }
@@ -92,7 +96,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase
     {
         $args = array('-v', 'not-a-file-or-directory');
 
-        $this->setEpectedException('InvalidArgumentException');
+        $this->setExpectedException('InvalidArgumentException');
 
         Runner::init($args);
     }
@@ -107,10 +111,10 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $expects = array(
             'convertor'           => 'mbstring',
             'convert_to_strategy' => 'long_name',
-            'target_locaiton'     => 'target-lovation',
+            'target_location'     => 'target-location',
             'base_path'           => 'base-path',
             'verbose'             => true,
-            'extesions'           => array('php', 'txt', 'html'),
+            'extensions'           => array('php', 'txt', 'html'),
             'convert_info' => array(
                 'input_charset'  => 'input-charset',
                 'output_charset' => 'output-charset',
@@ -170,7 +174,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase
     {
         $runner = new Runner;
 
-        $this->assertEquals('foo', $runner->getOption('test', 'foo'))
+        $this->assertEquals('foo', $runner->getOption('test', 'foo'));
     }
 
     public function testGetOptionWithNonStringNameRaiseException()
@@ -178,13 +182,13 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $this->setExpectedException('InvalidArgumentException');
 
         $runner = new Runner;
-        $runner->getOption('false');
+        $runner->getOption(false);
     }
 
     public function testSetOpions()
     {
         $runner = new Runner;
-        $result = $runner->setOptions(array('name', 'value'));
+        $result = $runner->setOptions(array('name' => 'value'));
 
         $this->assertSame($runner, $result);
         $this->assertEquals('value', $runner->getOption('name'));
@@ -200,32 +204,53 @@ class RunnerTest extends PHPUnit_Framework_TestCase
 
     public function testSetUpConvertorCanRaiseExceptionIfThePlatformDoseNotSupprotTheCovnertor()
     {
-        $runner = $this->getMock('Tcc\\ScriptFrontend\\Runner');
+        $this->setExpectedException('RuntimeException',
+            'Your platform dose not support the convertor you provide or have a available convertor');
+
+        $runner = $this->getMock('Tcc\\ScriptFrontend\\Runner',
+            array('checkEnvironment'));
 
         $runner->expects($this->once())
                ->method('checkEnvironment')
                ->will($this->returnValue(false));
 
-        $runner->setUpConvertor;
+        $runner->setOption('convert_info', array('some-convert-info'));
+        $runner->run();
     }
 
-    public function testSetUpConvertor()
+    public function testRun()
     {
         $options = array(
             'convertor'           => 'mbstring',
             'convert_to_strategy' => 'long_name',
+            'convert_info'        => array('some-convert-info'),
         );
 
-        $runner = new Runner;
-        $runner->setOptions($options);
+        $runner = $this->getMock('Tcc\\ScriptFrontend\\Runner',
+            array('addConvertFiles', 'convert'));
 
-        $runner->setUpConvertor();
+        $runner->expects($this->once())
+               ->method('addConvertFiles')
+               ->with($this->equalTo(array('some-convert-info')));
+
+        $runner->setOptions($options)
+               ->setPrinter(new FooPrinter);
+
+        $runner->run();
         $convertor = $runner->getConvertor();
 
         $this->assertInstanceOf('Tcc\\Convertor\\MbStringConvertor', $convertor);
-        $this->assertEquals(getcwd(), $convertor->getTargetLocation());
+        $this->assertEquals(strtr(getcwd(), '\\', '/'), $convertor->getTargetLocation());
         $this->assertInstanceOf('Tcc\\Convertor\\ConvertToStrategy\\LongNameConvertToStrategy',
-            $convertor->getConvertToStrategy);
+            $convertor->getConvertToStrategy());
+    }
+
+    public function testRunWillRaiseExceptionIfNoConvertInfoOption()
+    {
+        $this->setExpectedException('RuntimeException');
+
+        $runner = new Runner;
+        $runner->run();
     }
 
     public function testSetConvertorWithStringArgument()
@@ -248,7 +273,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase
 
     public function testSetConvertorWithAbstractConvertorArgument()
     {
-        $mockConvertor = $this->getMockForAbstract('Tcc\\Convertor\\AbstractConvertor');
+        $mockConvertor = $this->getMockForAbstractClass('Tcc\\Convertor\\AbstractConvertor');
 
         $runner = new Runner;
         $result = $runner->setConvertor($mockConvertor);
@@ -259,13 +284,13 @@ class RunnerTest extends PHPUnit_Framework_TestCase
 
     public function testSetConvertorWillRaiseExceptionIfArgumentIsNotStringOrAbstractConvertor()
     {
-        $this->setExpectedException('InvalidArgumentExceprion');
+        $this->setExpectedException('InvalidArgumentException');
 
         $runner = new Runner;
         $runner->setConvertor(false);
     }
 
-    public function testGetConvertorTryToSetOneIfConvertorNotSetBefore()
+    public function testGetConvertorTryToSetOneIfNotSetBefore()
     {
         $convertors = ConvertorFactory::getAvailableConvertor();
 
@@ -274,7 +299,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase
             return ;
         }
 
-        $convertor = array_pop($convertors);
+        $convertor = array_shift($convertors);
         $runner    = new Runner;
 
         $this->assertInstanceOf($convertor, $runner->getConvertor());
@@ -284,11 +309,12 @@ class RunnerTest extends PHPUnit_Framework_TestCase
     {
         $extensions = array('php', 'txt');
 
-        $mockContainer = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+        $mockContainer = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer',
+            array('setConvertExtensions'));
 
         $mockContainer->expects($this->once())
                       ->method('setConvertExtensions')
-                      ->with($this->EqualTo($extensions));
+                      ->with($this->equalTo($extensions));
 
         $runner = new Runner;
         $runner->setOption('extensions', $extensions);
@@ -310,7 +336,8 @@ class RunnerTest extends PHPUnit_Framework_TestCase
     public function testSetPrinter()
     {
         $runner  = new Runner;
-        $printer = $this->getMock('Tcc\\Test\\ScriptFrontend\\TestAssert\\FooPrinter');
+        $printer = $this->getMock('Tcc\\Test\\ScriptFrontend\\TestAssert\\FooPrinter',
+            array('setAppRunner'));
 
         $printer->expects($this->once())
                 ->method('setAppRunner')
@@ -337,13 +364,14 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $inputCharset  = 'utf-8';
         $outputCharset = 'ansi';
 
-        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer',
+            array('addFile'));
 
         $container->expects($this->once())
                   ->method('addFile')
-                  ->with($this->EqualTo($convertFile),
-                        $this->EqualTo($inputCharset)
-                        $this->EqualTo($outputCharset));
+                  ->with($this->equalTo($convertFile),
+                        $this->equalTo($inputCharset),
+                        $this->equalTo($outputCharset));
 
         $runner = new Runner;
         $runner->setConvertFileContainer($container);
@@ -351,15 +379,16 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $runner->addConvertFile($convertFile, $inputCharset, $outputCharset);
     }
 
-    public function testAddConvertFiles()
+    public function testAddConvertFilesWithArray()
     {
         $convertFiles = array('convert-files');
 
-        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer',
+            array('addFiles'));
 
         $container->expects($this->once())
                   ->method('addFiles')
-                  ->with($this->EqualTo($convertFiles));
+                  ->with($this->equalTo(new ConvertFileAggregate($convertFiles)));
 
         $runner = new Runner;
         $runner->setConvertFileContainer($container);
@@ -367,12 +396,39 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $runner->addConvertFiles($convertFiles);
     }
 
-    public function testClearConvertFile()
+    public function testAddConvertFilesWithConvertFileAggregate()
     {
-        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+        $convertFiles = new ConvertFileAggregate(array('convert-files'));
+
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer',
+            array('addFiles'));
 
         $container->expects($this->once())
-                  ->method('clearConvertFiles')
+                  ->method('addFiles')
+                  ->with($this->equalTo($convertFiles));
+
+        $runner = new Runner;
+        $runner->setConvertFileContainer($container);
+
+        $runner->addConvertFiles($convertFiles);
+    }
+
+    public function testAddConvertFilesWillRaiseExceptionIfConvertFilesNotArrayOrConvertFileAggregate()
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid convertFiles');
+
+        $runner = new Runner;
+        $runner->addConvertFiles('invalid-convert-files');
+    }
+
+    public function testClearConvertFile()
+    {
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer',
+            array('clearConvertFiles'));
+
+        $container->expects($this->once())
+                  ->method('clearConvertFiles');
 
         $runner = new Runner;
         $runner->setConvertFileContainer($container);
@@ -380,8 +436,63 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $runner->clearConvertFiles();
     }
 
+    public function prepareConvertor()
+    {
+        $runner = new Runner;
+
+        $runner->setConvertor(new FooConvertor)
+               ->setPrinter(new FooPrinter);
+
+        return $runner;
+    }
+
     public function testConvert()
     {
-        
+        $badConvertFile = new FooConvertFile;
+        $badConvertFile->setConvertErrorFlag(true);
+
+        $runner = $this->prepareConvertor();
+
+        $runner->addConvertFile(new FooConvertFile, 'input-charset', 'output-charset')
+               ->addConvertFile($badConvertFile, 'input-charset', 'output-charset')
+               ->addConvertFile(new FooConvertFile, 'input-charset', 'output-charset');
+
+        $runner->convert();
+
+        $this->assertEquals(3, $runner->convertFileCount());
+        $this->assertEquals(3, $runner->convertFileCount(Runner::COUNT_CONVERTED));
+        $this->assertEquals(1, $runner->convertFileCount(Runner::COUNT_FAILURE));
+        $this->assertEquals(2, $runner->convertFileCount(Runner::COUNT_SUCCESS));
+        $this->assertFalse($runner->getConvertErrorFlag());
+    }
+
+    public function testSetConvertResultWillRaiseExceptionIfErrorMessageIsNotStringOrNull()
+    {
+        $this->setExpectedException('InvalidArgumentException');
+
+        $runner = new Runner;
+        $runner->setConvertResult(new FooConvertFile, false);
+    }
+
+    public function testGetConvertResult()
+    {
+        $convertFile    = new FooConvertFile;
+        $badConvertFile = new FooConvertFile;
+        $badConvertFile->setConvertErrorFlag(true);
+
+        $runner = $this->prepareConvertor();
+
+        $runner->addConvertFile($convertFile, 'input-charset', 'output-charset')
+               ->addConvertFile($badConvertFile, 'input-charset', 'output-charset');
+
+        $runner->convert();
+        $resultStorage = $runner->getConvertResult();
+
+        $this->assertTrue($runner->getConvertErrorFlag());
+
+        $resultStorage->rewind();
+        $this->assertSame($convertFile, $resultStorage->current());
+        $resultStorage->next();
+        $this->assertSame($badConvertFile, $resultStorage->current());
     }
 }

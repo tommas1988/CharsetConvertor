@@ -5,6 +5,9 @@ use Tcc\Convertor\AbstractConvertor;
 use Tcc\Convertor\ConvertorFactory;
 use Tcc\ConvertFile\ConvertFileContainerInterface;
 use Tcc\ConvertFile\ConvertFileContainer;
+use Tcc\ConvertFile\ConvertFileInterface;
+use Tcc\ConvertFile\ConvertFileAggregateInterface;
+use Tcc\ConvertFIle\ConvertFileAggregate;
 use Tcc\Resolver\ResolverUtils as Resolver;
 use Tcc\ScriptFrontend\Printer\PrinterInterface;
 use Tcc\ScriptFrontend\Printer\ConsolePrinter;
@@ -12,6 +15,7 @@ use SplObjectStorage;
 use SimpleXmlElement;
 use InvalidArgumentException;
 use RuntimeException;
+use Exception;
 
 class Runner
 {
@@ -54,7 +58,7 @@ class Runner
             throw new RuntimeException('No argument is provided');
         }
 
-        $keys = array_keys($args);
+        $keys = array_flip($args);
         if (isset($keys['--help'])) {
             ConsolePrinter::printHelpInfo();
             $this->isHalt = true;
@@ -85,39 +89,49 @@ class Runner
             throw new InvalidArgumentException('Invalid convert element');
         }
 
+        $count = $count - 1;
         for ($i = 0; $i < $count; $i += 2) {
             $arg = $args[$i];
-            $var = isset($args[$i + 1]) ? $args[$i + 1] : null;
+            $val = isset($args[$i + 1]) ? $args[$i + 1] : null;
 
-            if ($arg === '--convertor' || $arg === '-c') {
-                $this->setOption('convertor', $val);
-                break;
-            } elseif ($arg === '--convert-to-strategy' || $arg === '-s') {
-                $this->setOption('convert_to_strategy', $val);
-                break;
-            } elseif ($arg === '--target-location' || $arg === '-t') {
-                $this->setOption('target_location', $val);
-                break;
-            } elseif ($arg === '--base-path' || $arg === '-b') {
-                $this->setOption('base_path', $val);
-                break;
-            } elseif ($arg === '--input-charset' || $arg === '-i') {
-                $convertInfo['input_charset'] = $val;
-                break;
-            } elseif ($arg === '--output-charset' || $arg === '-o') {
-                $convertInfo['output_charset'] = $val;
-                break;
-            } elseif ($arg === '--verbose' || $arg === '-v') {
-                $this->setOption('verbose', true);
-                $i--;
-                break;
-            } elseif ($arg === '--extension' || $arg === '-e') {
-                $this->setOption('extensions', explode(',', $val));
-                break;
-            } else {
-                ConsolePrinter::printUndefinedCommand($arg);
-                $this->ishalt = true;
-                return ;
+            switch ($arg) {
+                case '--convertor':
+                case '-c':
+                    $this->setOption('convertor', $val);
+                    break;
+                case '--convert-to-strategy':
+                case '-s':
+                    $this->setOption('convert_to_strategy', $val);
+                    break;
+                case '--target-location':
+                case '-t':
+                    $this->setOption('target_location', $val);
+                    break;
+                case '--base-path':
+                case '-b':
+                    $this->setOption('base_path', $val);
+                    break;
+                case '--input-charset':
+                case '-i':
+                    $convertInfo['input_charset'] = $val;
+                    break;
+                case '--output-charset':
+                case '-o':
+                    $convertInfo['output_charset'] = $val;
+                    break;
+                case '--verbose':
+                case '-v':
+                    $this->setOption('verbose', true);
+                    $i--;
+                    break;
+                case '--extension':
+                case '-e':
+                    $this->setOption('extensions', explode(',', $val));
+                    break;
+                default:
+                    ConsolePrinter::printUndefinedCommand($arg);
+                    $this->isHalt = true;
+                    return ;
             }
         }
 
@@ -132,7 +146,7 @@ class Runner
 
         $config = new SimpleXMLElement($configFile, 0, true);
 
-        if (isset($config->convert_info)) {
+        if (!isset($config->convert_info)) {
             throw new InvalidArgumentException('The needed convert_info field is not provided');
         }
 
@@ -141,7 +155,7 @@ class Runner
             Resolver::resolveConvertInfoFromXml($config->convert_info));
 
         $optionNames = array(
-            'converor', 
+            'convertor', 
             'convert_to_strategy',
             'target_location',
             'base_path',
@@ -172,12 +186,11 @@ class Runner
             return ;
         }
 
-        if ($this->getOption('convert_info')) {
+        if (!$this->getOption('convert_info')) {
             throw new RuntimeException('You haven`t given the converted files');
         }
 
         $this->setUpConvertor();
-
         $this->addConvertFiles($this->getOption('convert_info'));
 
         $printer = $this->getPrinter();
@@ -209,7 +222,7 @@ class Runner
 
     public function setOptions(array $options)
     {
-        $this->setOptions = $options;
+        $this->options = $options;
 
         return $this;
     }
@@ -235,12 +248,11 @@ class Runner
         $targetLocation = $this->getOption('target_location', getcwd());
         $this->getConvertor()->setTargetLocation($targetLocation);
 
-        $convertToStrategy = $this->getOption('convert_to_strategy');
-        if ($convertToStrategy
-            && Resolver::resolveClassName(
-                'convertor_convert_to_strategy',
-                $convertToStrategy . '_convert_to_strategy')
-        ) {
+        $convertToStrategy = Resolver::resolveClassName(
+            'convertor_convert_to_strategy',
+            $this->getOption('convert_to_strategy') . '_convert_to_strategy');
+
+        if ($convertToStrategy) {
             $strategy = new $convertToStrategy;
             if ($convertToStrategy === 'mirror') {
                 $strategy->setBasePath($this->getOption('base_path'), '');
@@ -319,8 +331,14 @@ class Runner
         return $this;
     }
 
-    public function addConvertFiles(array $convertFiles)
+    public function addConvertFiles($convertFiles)
     {
+        if (is_array($convertFiles)) {
+            $convertFiles = new ConvertFileAggregate($convertFiles);
+        } elseif (!$convertFiles instanceof ConvertFileAggregateInterface) {
+            throw new InvalidArgumentException('Invalid convertFiles');
+        }
+
         $container = $this->getConvertFileContainer();
         $container->addFiles($convertFiles);
 
@@ -382,7 +400,7 @@ class Runner
 
     public function setConvertResult(ConvertFileInterface $convertFile, $errMsg = null)
     {
-        if (!is_string($errMsg) || $errMsg !== null) {
+        if (!is_string($errMsg) && $errMsg !== null) {
             throw new InvalidArgumentException(
                 'Invalid error message type: ' . gettype($errMsg));
         }

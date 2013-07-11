@@ -19,27 +19,27 @@ class CovnertorFactory extends PHPUnit_Framework_TestCase
     {
         $this->setExpectedException('InvalidArgumentException');
 
-        ConvertorFactory::checkEnvrionment(false);
+        ConvertorFactory::checkEnvironment(false);
     }
 
     public function testCheckEnvrionmentWithAvailableConvertorName()
     {
-        $this->assertTrue(ConvertorFactory::checkEnvrionment('Foo'));
+        $this->assertTrue(ConvertorFactory::checkEnvironment('Foo'));
     }
 
     public function testCheckEnvrionmentWithAvailableConvertor()
     {
         $convertor = new FooConvertor;
 
-        $this->assertTrue(ConvertorFactory::checkEnvrionment($convertor));
+        $this->assertTrue(ConvertorFactory::checkEnvironment($convertor));
     }
 
     public function testCheckEnvrionmentWithoutAvailableConvertor()
     {
-        $this->assertFalse(ConvertorFactory::checkEnvrionment('invalid-convertor'));
+        $this->assertFalse(ConvertorFactory::checkEnvironment('invalid-convertor'));
 
         ConvertorFactory::setConvertors(false);
-        $this->assertFalse(ConvertorFactory::checkEnvrionment());
+        $this->assertFalse(ConvertorFactory::checkEnvironment());
     }
 
     public function testFactoryCanRaiseExceptionIfProvidedConvertorIsNotAvailable()

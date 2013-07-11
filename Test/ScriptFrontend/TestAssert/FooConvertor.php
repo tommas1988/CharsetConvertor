@@ -1,7 +1,9 @@
 <?php
 namespace Tcc\Test\ScriptFrontend\TestAssert;
 
+use Tcc\ConvertFile\ConvertFileInterface;
 use Tcc\Convertor\AbstractConvertor;
+use RuntimeException;
 
 class FooConvertor extends AbstractConvertor
 {
@@ -13,11 +15,11 @@ class FooConvertor extends AbstractConvertor
 	public function convert(ConvertFileInterface $convertFile)
 	{
 		if ($convertFile->getConvertErrorFlag()) {
-			throw new Exception();
+			throw new RuntimeException();
 		}
 	}
 
-	protected doConvert()
+	protected function doConvert()
 	{
 
 	}
