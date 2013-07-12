@@ -2,7 +2,7 @@
 namespace Tcc\ConvertFile;
 
 use SplFileInfo;
-use Exception;
+use InvalidArgumentException;
 
 class ConvertFile implements ConvertFileInterface
 {
@@ -15,11 +15,11 @@ class ConvertFile implements ConvertFileInterface
         if (is_string($file)) {
             $file = new SplFileInfo($file);
         } elseif (!$file instanceof SplFileInfo) {
-            throw new Exception('Invalid argument');
+            throw new InvalidArguemntException('Invalid convert file');
         }
 
         if (!$file->isFile() || !$file->isReadable()) {
-            throw new Exception();
+            throw new InvalidArgumentException('Convert file is not file or readable');
         }
 
         $this->fileInfo      = $file;

@@ -13,15 +13,23 @@ class ConvertFileTest extends PHPUnit_Framework_TestCase
     {
     	$this->convertFile = new ConvertFile(
             new SplFileInfo(__FILE__), 
-            'icharset', 
-            'ocharset');
+            'in-charset', 
+            'out-charset');
     }
 
-    public function testInitalWithNotFileRaiseException()
+    public function testConstructorWillRaiseExceptionIfConvertFileIsNotStringOrSplFileInfo()
     {
-        $this->setExpectedException('Exception');
+        $this->setExpectedException('InvalidArgumentException', 'Invalid convert file');
+
+        $convertFile = new ConvertFile(false, 'in-charset', 'out-charset');
+        $this->assertNull($convertFile);
+    }
+
+    public function testConstructorWillRaiseExceptionIfConvertFileIsNotFileOrReadable()
+    {
+        $this->setExpectedException('InvalidArgumentException', 'Convert file is not file or readable');
         
-        $convertFile = new ConvertFile(__DIR__, 'icharset', 'ocharset');
+        $convertFile = new ConvertFile(__DIR__, 'in-charset', 'out-charset');
         $this->assertNull($convertFile);
     }
 
@@ -36,14 +44,14 @@ class ConvertFileTest extends PHPUnit_Framework_TestCase
     {
         $convertFile = $this->convertFile;
 
-        $this->assertEquals('icharset', $convertFile->getInputCharset());
+        $this->assertEquals('in-charset', $convertFile->getInputCharset());
     }
 
     public function testGetOutputCharset()
     {
         $convertFile = $this->convertFile;
 
-        $this->assertEquals('ocharset', $convertFile->getOutputCharset());
+        $this->assertEquals('out-charset', $convertFile->getOutputCharset());
     }
 
     public function testGetFilenameWithExtension()

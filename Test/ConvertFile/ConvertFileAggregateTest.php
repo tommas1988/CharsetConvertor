@@ -15,6 +15,47 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
         $this->container->setConvertExtensions(array('txt'));
     }
 
+    public function testAddConvertFiles()
+    {
+        $convertFiles = array(
+            'input_charset'  => 'in-charset',
+            'output_charset' => 'out-charset',
+            'files' => array(1, 2, 3),
+            'dirs'  => array(1, 2),
+        );
+
+        $aggregate = $this->getMock('Tcc\\ConvertFile\\ConvertFileAggregate',
+            array('resolveFileOptions', 'resolveDirOption'), $convertFiles);
+        $aggregate->expects($this->exactly(3))
+                  ->method('resolveFileOptions');
+
+        $aggregate->expects($this->exactly(2))
+                  ->method('resolveDirOptions');
+
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+
+        $aggregate->addConvertFiles($container);
+    }
+
+    public function testConvertFileWillNotAddToContainerIfItHasBeenSetted()
+    {
+        $convertFiles = array(
+            'files' => array(),
+        );
+    }
+
+    public function loadConvertFilesWillRaiseExceptionIfNotAddConvertFileFirst()
+    {
+        $this->setExpectedException('RuntimeException',
+            'You have not add convert files yet');
+
+        $aggregate = new ConvertFileAggregate(array());
+        $aggregate->loadConvertFiles();
+    }
+
+
+
+
     public function testAddOnlyFilesWithGlobalCharset()
     {
         $convertFiles = array(

@@ -13,7 +13,7 @@ class MockConvertFileAggregate implements ConvertFileAggregateInterface
         $this->container = $container;
     }
 
-    public function getConvertFiles()
+    public function loadConvertFiles()
     {
         $convertFileFoo = new MockConvertFile();
         $convertFileBar = new MockConvertFile();

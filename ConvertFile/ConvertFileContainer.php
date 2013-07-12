@@ -99,7 +99,7 @@ class ConvertFileContainer implements ConvertFileContainerInterface
         }
 
         foreach ($this->convertAggregates as $aggregate) {
-            $aggregate->getConvertFiles();
+            $aggregate->loadConvertFiles();
         }
 
         $this->loadFinshed = true;
