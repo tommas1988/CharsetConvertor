@@ -4,7 +4,7 @@ namespace Tcc\ConvertFile;
 use SplFileInfo;
 use InvalidArgumentException;
 
-class ConvertFile implements ConvertFileInterface
+class ConvertFile
 {
     protected $inputCharset;
     protected $outputCharset;
@@ -19,7 +19,8 @@ class ConvertFile implements ConvertFileInterface
         }
 
         if (!$file->isFile() || !$file->isReadable()) {
-            throw new InvalidArgumentException('Convert file is not file or readable');
+            throw new InvalidArgumentException(
+                'Convert file is not file or readable');
         }
 
         $this->fileInfo      = $file;
@@ -47,7 +48,8 @@ class ConvertFile implements ConvertFileInterface
         $fileInfo = $this->fileInfo;
 
         if ($withoutExtension) {
-            return substr($fileInfo->getFilename(), 0, -(strlen($fileInfo->getExtension()) + 1));
+            return substr($fileInfo->getFilename(), 0,
+                -(strlen($fileInfo->getExtension()) + 1));
         }
 
         return $fileInfo->getFilename();

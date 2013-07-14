@@ -15,21 +15,21 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
     protected $filters;
     protected $convertFileClass;
 
-    public function __construct(array $convertDirOption, array $filters)
+    public function __construct(array $convertDirOption)
     {
         if (!isset($convertDirOption['input_charset'])
             || !isset($convertDirOption['output_charset'])
-            || !isset($filters['files'])
-            || !isset($filters['dirs'])
         ) {
-            throw new Exception(var_export($convertDirOption, 1) . var_export($filters, 1));
+            throw new Exception(var_export($convertDirOption, 1));
         }
 
         if (isset($convertDirOption['iterator'])
             && $convertDirOption['iterator'] instanceof RecursiveDirectoryIterator
         ) {
             $iterator = $convertDirOption['iterator'];
-        } elseif (isset($convertDirOption['name']) && is_string($convertDirOption['name'])) {
+        } elseif (isset($convertDirOption['name']) 
+            && is_string($convertDirOption['name'])
+        ) {
             $iterator      = new RecursiveDirectoryIterator($convertDirOption['name']);
             $this->dirname = $convertDirOption['name'];
         } else {
@@ -38,7 +38,6 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
         $this->inputCharset  = $convertDirOption['input_charset'];
         $this->outputCharset = $convertDirOption['output_charset'];
-        $this->filters       = $filters;
 
         parent::__construct($iterator);
     }
@@ -77,7 +76,10 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
             'output_charset' => $this->outputCharset,
         );
 
-        return new self($convertDirOption, $this->filters);
+        $iterator = new static($convertDirOption);
+        $iterator->setFilter($this->filters);
+
+        return $iterator;
     }
 
     public function current()
@@ -88,6 +90,16 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
             return new $convertFileClass($fileInfo, $this->inputCharset, $this->outputCharset);
         }
         return null;
+    }
+
+    public function setFilter(array $filter)
+    {
+        if (!isset($filters['files']) || !isset($filters['dirs'])) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid filter: %s', var_export($filter, true)));
+        }
+
+        $this->filter = $filter;
     }
 
     public function setConvertFileClass($class)

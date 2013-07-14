@@ -4,7 +4,7 @@ namespace Tcc\ConvertFile;
 use Exception;
 use SplFileInfo;
 
-class ConvertFileContainer implements ConvertFileContainerInterface
+class ConvertFileContainer
 {
     protected $loadedConvertFiles = array();
     protected $convertFiles       = array();
@@ -44,7 +44,7 @@ class ConvertFileContainer implements ConvertFileContainerInterface
             $file = new SplFileInfo($convertFile);
         } elseif ($convertFile instanceof SplFileInfo) {
             $file = $convertFile;
-        } elseif ($convertFile instanceof ConvertFileInterface) {
+        } elseif ($convertFile instanceof ConvertFile) {
             $isConvertFile = true;
             $file          = $convertFile;
         } else {
@@ -76,10 +76,9 @@ class ConvertFileContainer implements ConvertFileContainerInterface
         return true;
     }
     
-    public function addFiles(ConvertFileAggregateInterface $aggregate)
+    public function addFiles(ConvertFileAggregate $aggregate)
     {
         $aggregate->addConvertFiles($this);
-        $this->convertAggregates[] = $aggregate;
     }
     
     public function getConvertFiles()
@@ -92,14 +91,10 @@ class ConvertFileContainer implements ConvertFileContainerInterface
 
         foreach ($this->convertFiles as $convertFile) {
             $this->loadedConvertFiles[] = new $convertFileClass(
-                $convertFile['name'], 
+                $convertFile['name'],
                 $convertFile['input_charset'], 
                 $convertFile['output_charset']
             );
-        }
-
-        foreach ($this->convertAggregates as $aggregate) {
-            $aggregate->loadConvertFiles();
         }
 
         $this->loadFinshed = true;

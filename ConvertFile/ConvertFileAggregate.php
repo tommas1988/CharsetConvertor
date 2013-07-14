@@ -4,40 +4,29 @@ namespace Tcc\ConvertFile;
 use InvalidArgumentException;
 use RuntimeException;
 use RecursiveIteratorIterator;
+use Traversable;
 
-class ConvertFileAggregate implements ConvertFileAggregateInterface
+class ConvertFileAggregate
 {
-    protected $loadedConvertFiles = array();
-    protected $convertFiles       = array();
-    protected $convertDirs        = array();
-    protected $filenames          = array();
+    protected $convertFiles = array();
+    protected $convertDirs  = array();
+    protected $filenames    = array();
+    protected $filters      = array();
     protected $container;
 
-    protected $loadFinished       = false;
+    protected $added        = false;
     
     public function __construct(array $convertFiles)
     {
         $this->convertFiles = $convertFiles;
     }
-
-    /**
-     * Handy for debug
-     */
-    public function getConvertFiles()
-    {
-        return $this->convertFiles;
-    }
-
-    /**
-     * Handy for debug
-     */
-    public function getConvertDirs()
-    {
-        return $this->convertDirs;
-    }
     
-    public function addConvertFiles(ConvertFileContainerInterface  $container)
+    public function addConvertFiles(ConvertFileContainer  $container)
     {
+        if ($this->added) {
+            return ;
+        }
+
         $this->container = $container;
         $convertFiles    = $this->convertFiles;
         $inputCharset    = null;
@@ -65,51 +54,19 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
                     $outputCharset);
             }
         }
-    }
 
-    public function loadConvertFiles()
-    {
-        if ($this->loadFinished) {
-            return ;
-        }
-
-        if (!$this->container) {
-            throw new RuntimeException(
-                'You have not add convert files yet');
-        }
-
-        $filters = array(
-            'files' => $this->filenames,
-            'dirs'  => array(),
-        );
-
-        foreach ($this->convertDirs as $dir) {
-            foreach ($this->getConvertFileFromDirectory() as $convertFile) {
-                if ($convertFile) {
-                    $this->container->addFile($convertFile);
-                }
-            }
-            $filters['dirs'][] = $dir['name'];
-        }
-
-        foreach ($this->convertFiles as $convertFile) {
-            $this->container->addFile($convertFile['name'],
-                $convertFile['input_charset'],
-                $convertFile['output_charset']);
-        }
-
-        $this->loadFinished = true;
+        $this->addConvertFilesToContainer();
+        $this->added = true;
     }
 
     public function setDirectoryIteratorClass($class)
     {
-        //use Reflection to test wether the class is traversable
-
-        if (!is_string($class) || !class_exists($class)) {
+        if (!is_string($class) || !self::isSubclassOf($class, Traversable)) {
             throw new InvalidArgumentException('Invalid itertor class');
         }
 
         $this->itertorClass = $class;
+        return $this;
     }
 
     public function getDirectoryIteratorClass()
@@ -122,12 +79,66 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
         return $this->iteratorClass;
     }
 
-    protected function getConvertFileFromDirectory($dir, $filters)
+    /**
+     * Handy for debug
+     */
+    public function getConvertFiles()
     {
-        $iterator = $this->getDirectoryIteratorClass();
+        return $this->convertFiles;
+    }
 
-        return new RecursiveIteratorIterator(
-            new $iterator($dir, $filters));
+    /**
+     * Handy for debug
+     */
+    public function getConvertDirs()
+    {
+        return $this->convertDirs;
+    }
+
+    /**
+     * Handy for debug
+     */
+    public function getFilters()
+    {
+        return $this->filters;
+    }
+
+    protected function addConvertFilesToContainer()
+    {
+        if (!$this->container) {
+            throw new RuntimeException(
+                'You have not setted a container');
+        }
+
+        $filters = array(
+            'files' => $this->filenames,
+            'dirs'  => array(),
+        );
+
+        foreach ($this->convertDirs as $dir) {
+            foreach ($this->getConvertDirectoryIterator($dir, $filters) as $convertFile) {
+                if ($convertFile) {
+                    $this->container->addFile($convertFile);
+                }
+            }
+            $filters['dirs'][] = $dir['name'];
+        }
+        $this->filters = $filters;
+
+        foreach ($this->convertFiles as $convertFile) {
+            $this->container->addFile($convertFile['name'],
+                $convertFile['input_charset'],
+                $convertFile['output_charset']);
+        }
+    }
+
+    protected function getConvertDirectoryIterator($dir, $filter)
+    {
+        $class    = $this->getDirectoryIteratorClass();
+        $iterator = new $class($dir);
+        $iterator->setFilter($filters);
+
+        return new RecursiveIteratorIterator($iterator);
     }
 
     protected function resolveFileOptions(array $convertFileOption,
@@ -165,7 +176,7 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
     ) {
         if (!isset($convertDirOption['name'])) {
             throw new InvalidArgumentException(
-                'convert dir option must contain a name field');
+                'convert directory options must contain a name field');
         }
         $convertDir = $convertDirOption['name'];
 
@@ -214,5 +225,13 @@ class ConvertFileAggregate implements ConvertFileAggregateInterface
             'input_charset'  => $inputCharset,
             'output_charset' => $outputCharset,
         );
+    }
+
+    protected static function isSubclassOf($className, $type)
+    {
+        if (is_subclass_of($className, $type)) {
+            return true;
+        }
+        return false;
     }
 }

@@ -2,239 +2,187 @@
 namespace Tcc\Test\ConvertFile;
 
 use Tcc\ConvertFile\ConvertFileAggregate;
+use Tcc\ConvertFile\ConvertFileContainer;
 use PHPUnit_Framework_TestCase;
-use Tcc\Test\ConvertFile\Mock\MockConvertFileContainer;
 
 class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 {
     protected $container;
 
-    public function setUp()
+    public function validConvertFilesOptions()
     {
-        $this->container = new MockConvertFileContainer();
-        $this->container->setConvertExtensions(array('txt'));
-    }
-
-    public function testAddConvertFiles()
-    {
-        $convertFiles = array(
-            'input_charset'  => 'in-charset',
-            'output_charset' => 'out-charset',
-            'files' => array(1, 2, 3),
-            'dirs'  => array(1, 2),
-        );
-
-        $aggregate = $this->getMock('Tcc\\ConvertFile\\ConvertFileAggregate',
-            array('resolveFileOptions', 'resolveDirOption'), $convertFiles);
-        $aggregate->expects($this->exactly(3))
-                  ->method('resolveFileOptions');
-
-        $aggregate->expects($this->exactly(2))
-                  ->method('resolveDirOptions');
-
-        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
-
-        $aggregate->addConvertFiles($container);
-    }
-
-    public function testConvertFileWillNotAddToContainerIfItHasBeenSetted()
-    {
-        $convertFiles = array(
-            'files' => array(),
-        );
-    }
-
-    public function loadConvertFilesWillRaiseExceptionIfNotAddConvertFileFirst()
-    {
-        $this->setExpectedException('RuntimeException',
-            'You have not add convert files yet');
-
-        $aggregate = new ConvertFileAggregate(array());
-        $aggregate->loadConvertFiles();
-    }
-
-
-
-
-    public function testAddOnlyFilesWithGlobalCharset()
-    {
-        $convertFiles = array(
-            'input_charset'  => 'foo',
-            'output_charset' => 'bar',
-            'files'          => array(
-                array('name' => './_files/bar.txt',),
-            ),
-        );
-        $expected = array(
-            array(
-                'name'           => static::canonicalPath('./_files/bar.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
-            ),
-        );
-
-        $aggregate = new ConvertFileAggregate($convertFiles);
-        $container = $this->container;
-
-        $aggregate->addConvertFiles($container);
-        $result = $container->getConvertFiles();
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function testAddOnlyFilesWithSpecificCharset()
-    {
-        $convertFiles = array(
-            'input_charset'  => 'foo',
-            'output_charset' => 'bar',
-            'files'          => array(
-                array(
-                    'name'           => './_files/bar.txt',
-                    'input_charset'  => 'spec_foo',
-                    'output_charset' => 'spec_bar',
-                ),
-            ),
-        );
-        $expected = array(
-            array(
-                'name'           => static::canonicalPath('./_files/bar.txt'),
-                'input_charset'  => 'spec_foo',
-                'output_charset' => 'spec_bar',
-            ),
-        );
-        $aggregate = new ConvertFileAggregate($convertFiles);
-        $container = $this->container;
-
-        $aggregate->addConvertFiles($container);
-        $result = $container->getConvertFiles();
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function testAddOnlyDirsWithGlobalCharset()
-    {
-        $convertFiles = array(
-            'input_charset'  => 'foo',
-            'output_charset' => 'bar',
-            'dirs' => array(
-                array('name' => './_files'),
-            ),
-        );
-        $expected = array(
-            array(
-                'name'           => static::canonicalPath('./_files/bar.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
-            ),
-            array(
-                'name'           => static::canonicalPath('./_files/foo.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
-            ),
-            array(
-                'name'           => static::canonicalPath('./_files/foo_dir/sub_foo.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
-            ),
-        );
-
-        $aggregate = new ConvertFileAggregate($convertFiles);
-        $container = $this->container;
-
-        $aggregate->addConvertFiles($container);
-        $aggregate->getConvertFiles();
-        $result = $container->getConvertFiles();
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function testAddOnlyDirsWithSpecificCharset()
-    {
-        $convertFiles = array(
-            'input_charset'  => 'foo',
-            'ouptut_charset' => 'bar',
-            'dirs' => array(
-                 array(
-                    'name'           => './_files',
-                    'input_charset'  => 'spec_foo',
-                    'output_charset' => 'spec_bar',
-                ),
-            ),
-        );
-        $expected = array(
-            array(
-                'name'           => static::canonicalPath('./_files/bar.txt'),
-                'input_charset'  => 'spec_foo',
-                'output_charset' => 'spec_bar',
-            ),
-            array(
-                'name'           => static::canonicalPath('./_files/foo.txt'),
-                'input_charset'  => 'spec_foo',
-                'output_charset' => 'spec_bar',
-            ),
-            array(
-                'name'           => static::canonicalPath('./_files/foo_dir/sub_foo.txt'),
-                'input_charset'  => 'spec_foo',
-                'output_charset' => 'spec_bar',
-            ),
-        );
-
-        $aggregate = new ConvertFileAggregate($convertFiles);
-        $container = $this->container;
-
-        $aggregate->addConvertFiles($container);
-        $aggregate->getConvertFiles();
-        $result = $container->getConvertFiles();
-
-        $this->assertEquals($expected, $result);
-    }
-
-    public function testCanSkipFilesAndDirsThatAlreadyAdded()
-    {
-        $convertFiles = array(
-            'input_charset'  => 'foo',
-            'output_charset' => 'bar',
+        return array(
+            'input_charset'  => 'g-in-charset',
+            'output_charset' => 'g-out-charset',
             'files' => array(
-                 array(
-                     'name' => './_files/bar.txt',
+                array(
+                    'name'           => __FILE__,
+                    'input_charset'  => 'f-in-charset',
+                    'output_charset' => 'f-out-charset',
                 ),
             ),
             'dirs' => array(
                 array(
-                    'name'    => './_files',
+                    'name'           => './ConvertFile/_files',
+                    'input_charset'  => 'd-in-charset',
+                    'output_charset' => 'd-out-charset',
+                    'files' => array(
+                        'name'           => 'foo.txt',
+                        'input_charset'  => 'f-d-in-charset',
+                        'output_charset' => 'f-d-out-charset',
+                    ),
                     'subdirs' => array(
-                         array('name' => 'foo_dir'),
+                        'name'           => 'foo',
+                        'input_charset'  => 'sd-in-charset',
+                        'output_charset' => 'sd-out-charset',
                     ),
                 ),
             ),
         );
-        $expected = array(
+    }
+
+    public function invalidConvertDirOptions()
+    {
+        return array(
+            'files' => array(
+                array(
+                    'input_charset'  => 'f-in-charset',
+                    'output_charset' => 'f-out-charset',
+                ),
+            ), 
+        );
+    }
+
+    public function invalidConvertFileOptions()
+    {
+        return array(
+            'dirs' => array(
+                array(
+                    'input_charset'  => 'd-in-charset',
+                    'output_charset' => 'd-out-charset',
+                ),
+            ),
+        );
+    }
+
+    /**
+     * @dataProvider validConvertFilesOptions
+     */
+    public function testAddConvertFiles($convertFilesOptions)
+    {
+        $expectConvertFiles = array(
             array(
-                'name'           => static::canonicalPath('./_files/bar.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
+                'name'           => $this->canonicalPath(__FILE__),
+                'input_charset'  => 'f-in-charset',
+                'output_charset' => 'f-out-charset',
             ),
             array(
-                'name'           => static::canonicalPath('./_files/foo_dir/sub_foo.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
+                'name'           => $this->canonicalPath('./ConvertFiles/_files/foo.txt'),
+                'input_charset'  => 'f-d-in-charset',
+                'output_charset' => 'f-d-out-charset',
+            ),
+        );
+        $expectConvertDirs = array(
+            array(
+                'name'           => $this->canonicalPath('./ConvertFiles/_files/foo'),
+                'input_charset'  => 'sd-in-charset',
+                'output_charset' => 'sd-out-charset',
             ),
             array(
-                'name'           => static::canonicalPath('./_files/foo.txt'),
-                'input_charset'  => 'foo',
-                'output_charset' => 'bar',
+                'name'           => $this->canonicalPath('./ConvertFile/_files'),
+                'input_charset'  => 'd-in-charset',
+                'output_charset' => 'd-out-charset',
+            ),
+        );
+        $expectFilters = array(
+            'files' => array(
+                $this->canonicalPath(__FILE__),
+                $this->canonicalPath('./ConvertFiles/_files/foo.txt'),
+            ),
+            'dirs' => array(
+                $this->canonicalPath('./ConvertFiles/_files/foo'),
+                $this->canonicalPath('./ConvertFile/_files'),
             ),
         );
 
-        $aggregate = new ConvertFileAggregate($convertFiles);
-        $container = $this->container;
+        $aggregate = new ConvertFileAggregate($convertFilesOptions);
+
+        $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
+        $contaier->expects($this->exactly(4))
+                 ->method('addFile');
 
         $aggregate->addConvertFiles($container);
-        $aggregate->getConvertFiles();
-        $result = $container->getConvertFiles();
 
+        $this->assertEquals($expectConvertFiles, $aggregate->getConvertFiles());
+        $this->assertEquals($expectConvertDirs, $aggregate->getConvertDirs());
+        $this->assertEquals($expectFilters, $aggregate->getFilters());
+    }
 
-        $this->assertEquals($expected, $result);
+    /**
+     * @dataProvider invalidConvertFileOptions
+     */
+    public function testAddConvertFilesWillRaiseExceptionWithInvalidConvertFileOptions($convertFileOptions)
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'convert file options must contain a name field');
+
+        $aggregate = new ConvertFileAggregate($convertFileOptions);
+        $aggregate->addConvertFiles(new ConvertFileContainer);
+    }
+
+    /**
+     * @dataProvider invalidConvertDirOptions
+     */
+    public function testAddConvertFilesWillRaiseExceptionWithInvalidConvertDirOptions($convertDirOptions)
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'convert directory options must contain a name field');
+
+        $aggregate = new ConvertFileAggregate($convertDirOptions);
+        $aggregate->addConvertFiles(new ConvertFileContainer);
+    }
+
+    public function testSetDirectoryIteratorClassWillRaiseExceptionIfClassIsNotString()
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid itertor class');
+
+        $aggregate = new ConvertFileAggregate(array());
+        $aggregate->setDirectoryIteratorClass(false);
+    }
+
+    public function testSetDirectoryIteratorClassWillRaiseExcetptionIfClassIsNotTraversable()
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid iterator class');
+
+        $aggregate = new ConvertFileAggregate(array());
+        $aggregate->setDirectoryIteratorClass('stdClass');
+    }
+
+    public function testSetDirectoryIteratorClass()
+    {
+        $aggregate = new ConvertFileAggregate(array());
+        $result = $aggregate->setDirectoryIteratorClass('DirectoryIterator');
+
+        $this->assertSame($aggregate, $result);
+    }
+
+    public function testGetDirectoryIteratorClass()
+    {
+        $aggregate = new ConverFileAggregate(array());
+        $aggregate->setDirectoryIteratorClass('DirectoryIterator');
+
+        $this->assertEquals('DirectoryIterator',
+            $aggregate->getDirectoryIteratroClass());
+    }
+
+    public function testGetDiretoryIteratorClassWillReturnADefualtOneIfNotSetBefore()
+    {
+        $aggregate = new ConvertFileAggregate(array());
+
+        $this->assertEquals('Tcc\\ConvertFile\\Iterator\\ConvertDirectoryIterator',
+            $aggregate->getConvertDirectoryIteratorClass());
     }
 
     protected static function canonicalPath($path)
