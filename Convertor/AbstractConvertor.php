@@ -21,7 +21,6 @@ abstract class AbstractConvertor
     public function setTargetLocation($location)
     {
         $this->targetLocation = static::canonicalPath($location);
-        
         return $this;
     }
 
@@ -34,13 +33,7 @@ abstract class AbstractConvertor
         return $this->targetLocation;
     }
 
-    public function setConvertFile(ConvertFile $convertFile)
-    {
-        $this->convertFile = $convertFile;
-        return $this;
-    }
-
-    public function getConvertFile()
+    public function getConvertingFile()
     {
         return $this->convertFile;
     }
