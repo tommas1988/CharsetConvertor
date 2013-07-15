@@ -5,39 +5,40 @@ use Tcc\ConvertFile\ConvertFileContainer;
 use Tcc\ConvertFile\ConvertFile;
 use RecursiveFilterIterator;
 use RecursiveDirectoryIterator;
-use Exception;
+use InvalidArgumentException;
 
 class ConvertDirectoryIterator extends RecursiveFilterIterator
 {
-    protected $dirname;
     protected $inputCharset;
     protected $outputCharset;
     protected $filters;
-    protected $convertFileClass;
 
-    public function __construct(array $convertDirOption)
+    public function __construct(array $convertDirOptions)
     {
-        if (!isset($convertDirOption['input_charset'])
-            || !isset($convertDirOption['output_charset'])
+        if (!isset($convertDirOptions['input_charset'])
+            || !isset($convertDirOptions['output_charset'])
         ) {
-            throw new Exception(var_export($convertDirOption, 1));
+            throw new InvalidArgumentException(sprintf(
+                'convert directoty options must contain charset info, but passed is: %s',
+                var_export($convertDirOptions, true)));
         }
 
-        if (isset($convertDirOption['iterator'])
-            && $convertDirOption['iterator'] instanceof RecursiveDirectoryIterator
+        if (isset($convertDirOptions['iterator'])
+            && $convertDirOptions['iterator'] instanceof RecursiveDirectoryIterator
         ) {
-            $iterator = $convertDirOption['iterator'];
-        } elseif (isset($convertDirOption['name']) 
-            && is_string($convertDirOption['name'])
+            $iterator = $convertDirOptions['iterator'];
+        } elseif (isset($convertDirOptions['name']) 
+            && is_string($convertDirOptions['name'])
         ) {
-            $iterator      = new RecursiveDirectoryIterator($convertDirOption['name']);
-            $this->dirname = $convertDirOption['name'];
+            $iterator = new RecursiveDirectoryIterator($convertDirOptions['name']);
         } else {
-            throw new Exception('Invalid argument');
+            throw new InvalidArgumentException(sprintf(
+                'convert directory options must contain iterator or name field, but passed is: %s',
+                var_export($convertDirOptions, true)));
         }
 
-        $this->inputCharset  = $convertDirOption['input_charset'];
-        $this->outputCharset = $convertDirOption['output_charset'];
+        $this->inputCharset  = $convertDirOptions['input_charset'];
+        $this->outputCharset = $convertDirOptions['output_charset'];
 
         parent::__construct($iterator);
     }
@@ -48,7 +49,6 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
         if ($fileInfo->isFile()) {
             $filename = ConvertFileContainer::canonicalPath($fileInfo->getPathname());
-
             if (in_array($filename, $this->filters['files'])) {
                 return false;
             }
@@ -57,7 +57,6 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
         if ($fileInfo->isDir()) {
             $dirname = ConvertFileContainer::canonicalPath($fileInfo->getPathname());
-
             if (in_array($dirname, $this->filters['dirs'])) {
                 return false;
             }
@@ -70,13 +69,13 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
     public function getChildren()
     {
-        $convertDirOption = array(
+        $convertDirOptions = array(
             'iterator'       => $this->getInnerIterator()->getChildren(),
             'input_charset'  => $this->inputCharset,
             'output_charset' => $this->outputCharset,
         );
 
-        $iterator = new static($convertDirOption);
+        $iterator = new self($convertDirOptions);
         $iterator->setFilter($this->filters);
 
         return $iterator;
@@ -86,41 +85,20 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
     {
         $fileInfo = parent::current();
         if ($fileInfo->isFile()) {
-            $convertFileClass = $this->getConvertFileClass();
-            return new $convertFileClass($fileInfo, $this->inputCharset, $this->outputCharset);
+            return new ConvertFile($fileInfo,
+                $this->inputCharset, $this->outputCharset);
         }
         return null;
     }
 
-    public function setFilter(array $filter)
+    public function setFilter(array $filters)
     {
         if (!isset($filters['files']) || !isset($filters['dirs'])) {
             throw new InvalidArgumentException(sprintf(
-                'Invalid filter: %s', var_export($filter, true)));
+                'Invalid filters: %s', var_export($filters, true)));
         }
 
-        $this->filter = $filter;
-    }
-
-    public function setConvertFileClass($class)
-    {
-        if (!is_string($class)) {
-            throw new Exception('Invalid argument');
-        }
-
-        if (!is_subclass_of($class, 'Tcc\\ConvertFile\\ConvertFileInterface')) {
-            throw new Exception('The provided class dose not implement '
-                              . 'Tcc\\ConvertFileInterface or the PHP '
-                              . 'version is lower than 5.3.7');
-        }
-        $this->convertFileClass = $class;
-    }
-
-    public function getConvertFileClass()
-    {
-        if (!$this->convertFileClass) {
-            $this->setConvertFileClass('Tcc\\ConvertFile\\ConvertFile');
-        }
-        return $this->convertFileClass;
+        $this->filters = $filters;
+        return $this;
     }
 }

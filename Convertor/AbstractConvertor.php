@@ -1,11 +1,12 @@
 <?php
 namespace Tcc\Convertor;
 
-use Tcc\ConvertFile\ConvertFileInterface;
+use Tcc\ConvertFile\ConvertFile;
 use Tcc\Convertor\ConvertToStrategy\AbstractConvertToStrategy;
 use Tcc\Convertor\ConvertToStrategy\LongNameConvertToStrategy;
 use SplFileObject;
-use Exception;
+use RuntimeException;
+use InvalidArgumentException;
 
 abstract class AbstractConvertor
 {
@@ -27,13 +28,13 @@ abstract class AbstractConvertor
     public function getTargetLocation()
     {
         if (!$this->targetLocation) {
-            throw new Exception('targetLocation has not set');
+            throw new RuntimeException('targetLocation has not been setted');
         }
 
         return $this->targetLocation;
     }
 
-    public function setConvertFile(ConvertFileInterface $convertFile)
+    public function setConvertFile(ConvertFile $convertFile)
     {
         $this->convertFile = $convertFile;
         return $this;
@@ -61,7 +62,7 @@ abstract class AbstractConvertor
         return $this->convertToStrategy;
     }
 
-    public function convert(ConvertFileInterface $convertFile)
+    public function convert(ConvertFile $convertFile)
     {
         $this->setConvertFile($convertFile);
 
@@ -70,7 +71,12 @@ abstract class AbstractConvertor
         $this->convertFinish = true;
     }
 
-    public function convertError()
+    public function convertFinish()
+    {
+        return (bool) $this->convertFinish;
+    }
+
+    protected function convertError()
     {
         $this->getConvertToStrategy()->restoreConvert();
 
@@ -81,18 +87,13 @@ abstract class AbstractConvertor
         $this->convertFinish  = false;
         $this->convertFile = null;
 
-        throw new Exception($errorMessage);
-    }
-
-    public function convertFinish()
-    {
-        return (bool) $this->convertFinish;
+        throw new RuntimeException($errorMessage);
     }
 
     public static function canonicalPath($path)
     {
         if (!$path = realpath($path)) {
-            throw new Exception();
+            throw new InvalidArgumentException();
         }
 
         $path = rtrim(str_replace('\\', '/', $path), '/');

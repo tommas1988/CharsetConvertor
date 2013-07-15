@@ -1,132 +1,89 @@
 <?php
 namespace Tcc\ConvertFile;
 
-use Exception;
+use InvalidArgumentException;
 use SplFileInfo;
 
 class ConvertFileContainer
 {
-    protected $loadedConvertFiles = array();
-    protected $convertFiles       = array();
-    protected $convertAggregates  = array();
-    protected $convertExtensions  = array();
-    protected $convertFileClass;
+    protected $convertFiles = array();
+    protected $convertExtensions;
 
-    protected $loadFinshed        = false;
-    
-    public function setConvertFileClass($class)
-    {
-        if (!is_string($class)) {
-            throw new Exception('Invalid argument');
+    public function addFile($convertFile,
+        $inputCharset = null, $outputCharset = null
+    ) {
+        $isConvertFile = ($convertFile instanceof ConvertFile) ? true : false;
+
+        if (!$isConvertFile) {
+            $convertFile = new ConvertFile($convertFile,
+                $inputCharset, $outputCharset);
         }
-
-        if (!is_subclass_of($class, 'Tcc\\ConvertFile\\ConvertFileInterface')) {
-            throw new Exception('The provided class dose not implement '
-                              . 'Tcc\\ConvertFile\\ConvertFileInterface '
-                              . 'or the PHP version is lower than 5.3.7');
-        }
-        $this->convertFileClass = $class;
-    }
-
-    public function getConvertFileClass()
-    {
-        if (!$this->convertFileClass) {
-            $this->setConvertFileClass('Tcc\\ConvertFile\\ConvertFile');
-        }
-        return $this->convertFileClass;
-    }
-
-    public function addFile($convertFile, $inputCharset = null, $outputCharset = null)
-    {
-        $isConvertFile = false;
-
-        if (is_string($convertFile)) {
-            $file = new SplFileInfo($convertFile);
-        } elseif ($convertFile instanceof SplFileInfo) {
-            $file = $convertFile;
-        } elseif ($convertFile instanceof ConvertFile) {
-            $isConvertFile = true;
-            $file          = $convertFile;
-        } else {
-            throw new Exception();
-        }
-
-        if (!$isConvertFile && !$file->isReadable()) {
-            throw new Exception();
-        }
-
-        $extension = static::canonicalExtension($file->getExtension());
-        if ($this->getConvertExtensions() !== null
-            && !in_array($extension, $this->getConvertExtensions())
-        ) {
-            unset($file, $convertFile);
+        
+        $extension  = $convertFile->getExtension();
+        $extensions = $this->getConvertExtensions();
+        if ($extensions !== null && !in_array($extension, $extensions)) {
+            unset($convertFile);
             return false;
         }
 
-        if ($isConvertFile) {
-            $this->loadedConvertFiles[] = $convertFile;
-            return true;
-        }
-
-        $this->convertFiles[] = array(
-            'name'           => $file,
-            'input_charset'  => $inputCharset,
-            'output_charset' => $outputCharset
-        );
+        $this->convertFiles[] = $convertFile;
         return true;
     }
     
     public function addFiles(ConvertFileAggregate $aggregate)
     {
         $aggregate->addConvertFiles($this);
+
+        return $this;
     }
     
-    public function getConvertFiles()
+    public function getFiles()
     {
-        if ($this->loadFinshed) {
-            return $this->loadedConvertFiles;
-        }
-
-        $convertFileClass = $this->getConvertFileClass();
-
-        foreach ($this->convertFiles as $convertFile) {
-            $this->loadedConvertFiles[] = new $convertFileClass(
-                $convertFile['name'],
-                $convertFile['input_charset'], 
-                $convertFile['output_charset']
-            );
-        }
-
-        $this->loadFinshed = true;
-        return $this->loadedConvertFiles;
+        return $this->convertFiles;
     }
 
     public function count()
     {
-        return count($this->getConvertFiles());
+        return count($this->convertFiles);
     }
 
-    public function clearConvertFiles()
+    public function clearFiles()
     {
-        $this->loadedConvertFiles = array();
-        $this->convertFiles       = array();
-        $this->convertAggregates  = array();
-        $this->loadFinshed        = false;
+        $this->convertFiles = array();
+
+        return $this;
     }
 
-    public function setConvertExtensions(array $convertExtensions = null)
+    public function addConvertExtension($extension)
     {
-        if ($convertExtensions === null) {
-            $this->convertExtensions = null;
+        if (!is_string($extension)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid file extension, type: %s, value: %s',
+                gettype($extension),
+                var_export($extension, true)));
+        }
 
+        $extension = static::canonicalExtension($extension);
+
+        if ($this->convertExtensions === null) {
+            $this->convertExtensions = array($extension);
+        } elseif (!in_array($extension, $this->convertExtensions)) {
+            $this->convertExtensions[] = $extension;
+        }
+
+        return $this;
+    }
+
+    public function setConvertExtensions(array $extensions = null)
+    {
+        $this->convertExtensions = null;
+
+        if ($extensions === null) {
             return $this;
         }
 
-        foreach ($convertExtensions as $extension) {
-            $extension = static::canonicalExtension($extension);
-            if (!in_array($extension, $this->convertExtensions)) {
-                $this->convertExtensions[] = $extension;
-            }
+        foreach ($extensions as $extension) {
+            $this->addConvertExtension($extension);
         }
 
         return $this;

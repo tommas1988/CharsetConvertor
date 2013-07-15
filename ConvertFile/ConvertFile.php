@@ -15,7 +15,7 @@ class ConvertFile
         if (is_string($file)) {
             $file = new SplFileInfo($file);
         } elseif (!$file instanceof SplFileInfo) {
-            throw new InvalidArguemntException('Invalid convert file');
+            throw new InvalidArgumentException('Invalid convert file');
         }
 
         if (!$file->isFile() || !$file->isReadable()) {

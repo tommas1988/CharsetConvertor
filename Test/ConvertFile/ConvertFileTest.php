@@ -19,7 +19,8 @@ class ConvertFileTest extends PHPUnit_Framework_TestCase
 
     public function testConstructorWillRaiseExceptionIfConvertFileIsNotStringOrSplFileInfo()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Invalid convert file');
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid convert file');
 
         $convertFile = new ConvertFile(false, 'in-charset', 'out-charset');
         $this->assertNull($convertFile);
@@ -27,7 +28,8 @@ class ConvertFileTest extends PHPUnit_Framework_TestCase
 
     public function testConstructorWillRaiseExceptionIfConvertFileIsNotFileOrReadable()
     {
-        $this->setExpectedException('InvalidArgumentException', 'Convert file is not file or readable');
+        $this->setExpectedException('InvalidArgumentException',
+            'Convert file is not file or readable');
         
         $convertFile = new ConvertFile(__DIR__, 'in-charset', 'out-charset');
         $this->assertNull($convertFile);

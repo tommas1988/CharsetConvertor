@@ -3,10 +3,6 @@ namespace Tcc\Test\ConvertFile;
 
 use Tcc\ConvertFile\ConvertFileContainer;
 use PHPUnit_Framework_TestCase;
-use Tcc\Test\ConvertFile\Mock\MockConvertFile;
-use Tcc\Test\ConvertFile\Mock\MockConvertFileAggregate;
-use SplFileInfo;
-
 
 class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
 {
@@ -17,15 +13,17 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
         $this->container = new ConvertFileContainer();
     }
 
-    public function testAddNotExistsFileThrowException()
+    public function testAddFile()
     {
-        $this->setExpectedException('Exception');
         $container = $this->container;
 
-        $container->addFile('not_exists_file');
+        $result = $container->addFile(__FILE__);
+
+        $this->assertTrue($result);
+        $this->assertSame(1, $container->count());
     }
 
-    public function testAddFileWithNotAllowedExtension()
+    public function testCanNotAddToContainerIfConvertFileExtensionIsNotInTheContainer()
     {
         $container = $this->container;
 
@@ -33,93 +31,105 @@ class ConvertFileContainerTest extends PHPUnit_Framework_TestCase
         $result = $container->addFile(__FILE__);
 
         $this->assertFalse($result);
-    }
-
-    public function testCanAddFileName()
-    {
-        $container = $this->container;
-
-        $container->setConvertExtensions(array('php'));
-        $result = $container->addFile(__FILE__);
-
-        $this->assertTrue($result);
-    }
-
-    public function testCanAddConvertFileObject()
-    {
-        
-        $container   = $this->container;
-        $convertFile = new MockConvertFile();
-
-        $convertFile->setExtension('foo');
-        $container->setConvertExtensions(array('foo'));
-
-        $result = $container->addFile($convertFile);
-        $this->assertTrue($result);
-    }
-
-    public function testCanAddSplFileInfo()
-    {
-        $container = $this->container;
-        $fileInfo  = new SplFileInfo(__FILE__);
-
-        $container->setConvertExtensions(array('php'));
-        $result = $container->addFile($fileInfo);
-        $this->assertTrue($result);
+        $this->assertSame(0, $container->count());
     }
 
     public function testCanAddFiles()
     {
         $container = $this->container;
-        $aggregate = new MockConvertFileAggregate();
 
-        $container->setConvertExtensions(array('test'));
-        $container->addFiles($aggregate);
-        $convertFiles = $container->getConvertFiles();
+        $aggregate = $this->getMock('Tcc\\ConvertFile\\ConvertFileAggregate',
+            array('addConvertFiles'), array(array()));
+        $aggregate->expects($this->once())
+                  ->method('addConvertFiles')
+                  ->with($this->identicalTo($container));
+
+        $result = $container->addFiles($aggregate);
+
+        $this->assertSame($container, $result);
+    }
+
+    public function testGetFiles()
+    {
+        $container = $this->container;
+        
+        $container->addFile('./ConvertFile/_files/foo.txt');
+        $container->addFile('./ConvertFile/_files/bar.txt');
+
+        $this->assertContainsOnlyInstancesOf('Tcc\\ConvertFile\\ConvertFile',
+            $container->getFiles());
     }
 
     public function testCount()
     {
         $container = $this->container;
-        $aggregate = new MockConvertFileAggregate();
-
-        $container->setConvertExtensions(array('test'));
-        $container->addFiles($aggregate);
-        $convertFiles = $container->getConvertFiles();
+        
+        $container->addFile('./ConvertFile/_files/foo.txt');
+        $container->addFile('./ConvertFile/_files/bar.txt');
 
         $this->assertSame(2, $container->count());
     }
 
-    public function testLoadedConvertFilesAreAllConvertFileObject()
-    {
-        $container      = $this->container;
-        $fileInfo       = new SplFileInfo(__FILE__);
-        $aggregate      = new MockConvertFileAggregate();
-        $convertFileObj = new MockConvertFile();
-
-        $container->setConvertExtensions(array('php', 'foo', 'test'));
-        $convertFileObj->setExtension('foo');
-
-        $container->addFile(__FILE__);
-        $container->addFile($convertFileObj);
-        $container->addFile($fileInfo);
-        $container->addFiles($aggregate);
-
-        $convertFiles = $container->getConvertFiles();
-        $this->assertEquals(5, count($convertFiles));
-        foreach ($convertFiles as $convertFile) {
-            $this->assertInstanceOf('Tcc\\ConvertFile\\ConvertFileInterface', $convertFile);
-        }
-    }
-
-    public function testSetCanonicalConvertExtensions()
+    public function testClearFiles()
     {
         $container = $this->container;
-        $extensions = array('PHP', 'Txt', 'Php');
-        $expected   = array('php', 'txt');
+        
+        $container->addFile('./ConvertFile/_files/foo.txt');
+        $container->addFile('./ConvertFile/_files/bar.txt');
 
-        $container->setConvertExtensions($extensions);
-        $result = $container->getConvertExtensions();
-        $this->assertEquals($expected, $result, var_export($result, 1));
+        $this->assertSame(2, $container->count());
+        $result = $container->clearFiles();
+        $this->assertSame($container, $result);
+        $this->assertSame(0, $container->count());
+    }
+
+    public function testAddConvertExtension()
+    {
+        $container = $this->container;
+        $expects   = array('php', 'txt');
+
+        $result = $container->addConvertExtension('foo.php')
+                            ->addConvertExtension('Txt')
+                            ->addConvertExtension('php');
+
+        $this->assertEquals($expects, $container->getConvertExtensions());
+    }
+
+    public function testAddFileExtensionWillRaiseExceptionIfExtensionIsNotString()
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid file extension, type: boolean, value: false');
+
+        $container = $this->container;
+        $container->addConvertExtension(false);
+    }
+
+    public function testSetConvertFilesWithNull()
+    {
+        $container = $this->container;
+
+        $container->addConvertExtension('php')
+                  ->addConvertExtension('txt');
+
+        $this->assertEquals(array('php', 'txt'),
+            $container->getConvertExtensions());
+
+        $result = $container->setConvertExtensions();
+        $this->assertSame($container, $result);
+        $this->assertSame(null, $container->getConvertExtensions());
+    }
+
+    public function testSetConvertFilesWillArray()
+    {
+        $container = $this->container;
+
+        $container->addConvertExtension('php');
+        $this->assertEquals(array('php'),
+            $container->getConvertExtensions());
+
+        $result = $container->setConvertExtensions(array('txt'));
+        $this->assertSame($container, $result);
+        $this->assertEquals(array('txt'),
+            $container->getConvertExtensions());
     }
 }

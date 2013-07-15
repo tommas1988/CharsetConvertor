@@ -22,7 +22,8 @@ abstract class ConvertorFactory
         $convertors = static::getAvailableConvertor();
 
         if ($convertors === false
-            || isset($convertorName) && !in_array($convertorName, array_flip($convertors))
+            || isset($convertorName)
+            && !in_array($convertorName, array_flip($convertors))
         ) {
             return false;
         }

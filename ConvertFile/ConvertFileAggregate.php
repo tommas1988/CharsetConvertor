@@ -12,13 +12,13 @@ class ConvertFileAggregate
     protected $convertDirs  = array();
     protected $filenames    = array();
     protected $filters      = array();
+    protected $iteratorClass;
     protected $container;
-
     protected $added        = false;
     
-    public function __construct(array $convertFiles)
+    public function __construct(array $convertFilesOptions)
     {
-        $this->convertFiles = $convertFiles;
+        $this->convertFilesOptions = $convertFilesOptions;
     }
     
     public function addConvertFiles(ConvertFileContainer  $container)
@@ -28,28 +28,28 @@ class ConvertFileAggregate
         }
 
         $this->container = $container;
-        $convertFiles    = $this->convertFiles;
+        $options         = $this->convertFilesOptions;
         $inputCharset    = null;
         $outputCharset   = null;
 
-        if (isset($convertFiles['input_charset'])) {
-            $inputCharset = $convertFiles['input_charset'];
+        if (isset($options['input_charset'])) {
+            $inputCharset = $options['input_charset'];
         }
-        if (isset($convertFiles['output_charset'])) {
-            $outputCharset = $convertFiles['output_charset'];
+        if (isset($options['output_charset'])) {
+            $outputCharset = $options['output_charset'];
         }
 
-        if (isset($convertFiles['files'])) {
-            foreach ($convertFiles['files'] as $convertFileOption) {
-                $this->resolveFileOptions($convertFileOption,
+        if (isset($options['files'])) {
+            foreach ($options['files'] as $convertFileOptions) {
+                $this->resolveFileOptions($convertFileOptions,
                     $inputCharset,
                     $outputCharset);
             }
         }
 
-        if (isset($convertFiles['dirs'])) {
-            foreach ($convertFiles['dirs'] as $convertDirOption) {
-                $this->resolveDirOptions($convertDirOption,
+        if (isset($options['dirs'])) {
+            foreach ($options['dirs'] as $convertDirOptions) {
+                $this->resolveDirOptions($convertDirOptions,
                     $inputCharset,
                     $outputCharset);
             }
@@ -61,18 +61,20 @@ class ConvertFileAggregate
 
     public function setDirectoryIteratorClass($class)
     {
-        if (!is_string($class) || !self::isSubclassOf($class, Traversable)) {
-            throw new InvalidArgumentException('Invalid itertor class');
+        if (!is_string($class) || !self::isSubclassOf($class, 'Traversable')) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid iterator class: %s',
+                var_export($class, true)));
         }
 
-        $this->itertorClass = $class;
+        $this->iteratorClass = $class;
         return $this;
     }
 
     public function getDirectoryIteratorClass()
     {
         if (!$this->iteratorClass) {
-            $this->setConvertDirectoryIteratorClass(
+            $this->setDirectoryIteratorClass(
                 'Tcc\\ConvertFile\\Iterator\\ConvertDirectoryIterator');
         }
 
@@ -132,7 +134,7 @@ class ConvertFileAggregate
         }
     }
 
-    protected function getConvertDirectoryIterator($dir, $filter)
+    protected function getConvertDirectoryIterator($dir, $filters)
     {
         $class    = $this->getDirectoryIteratorClass();
         $iterator = new $class($dir);
@@ -141,44 +143,44 @@ class ConvertFileAggregate
         return new RecursiveIteratorIterator($iterator);
     }
 
-    protected function resolveFileOptions(array $convertFileOption,
+    protected function resolveFileOptions(array $convertFileOptions,
         $inputCharset, $outputCharset
     ) {
-        if (!isset($convertFileOption['name'])) {
+        if (!isset($convertFileOptions['name'])) {
             throw new InvalidArgumentException(
                 'convert file options must contain a name field');
         }
 
-        $convertFile = ConvertFileContainer::canonicalPath($convertFileOption['name']);
+        $convertFile = ConvertFileContainer::canonicalPath($convertFileOptions['name']);
         
         if (in_array($convertFile ,$this->filenames)) {
             return ;
         }
 
-        if (isset($convertFileOption['input_charset'])) {
-            $inputCharset = $convertFileOption['input_charset'];
+        if (isset($convertFileOptions['input_charset'])) {
+            $inputCharset = $convertFileOptions['input_charset'];
         }
-        if (isset($convertFileOption['output_charset'])) {
-            $outputCharset = $convertFileOption['output_charset'];
+        if (isset($convertFileOptions['output_charset'])) {
+            $outputCharset = $convertFileOptions['output_charset'];
         }
 
         //mark this file is added to container
         $this->filenames[]  = $convertFile;
-        $this->convertFiles = array(
+        $this->convertFiles[] = array(
             'name'           => $convertFile,
             'input_charset'  => $inputCharset,
             'output_charset' => $outputCharset,
         );
     }
 
-    protected function resolveDirOptions(array $convertDirOption,
+    protected function resolveDirOptions(array $convertDirOptions,
         $inputCharset = null, $outputCharset = null, $parentDir = null
     ) {
-        if (!isset($convertDirOption['name'])) {
+        if (!isset($convertDirOptions['name'])) {
             throw new InvalidArgumentException(
                 'convert directory options must contain a name field');
         }
-        $convertDir = $convertDirOption['name'];
+        $convertDir = $convertDirOptions['name'];
 
         //concat directory name and parent directory name
         $concatWithParentDir = function($parentDir, $name) {
@@ -186,11 +188,11 @@ class ConvertFileAggregate
             return ConvertFileContainer::canonicalPath($pathname);
         };
 
-        if (isset($convertDirOption['input_charset'])) {
-            $inputCharset  = $convertDirOption['input_charset'];
+        if (isset($convertDirOptions['input_charset'])) {
+            $inputCharset  = $convertDirOptions['input_charset'];
         }
-        if (isset($convertDirOption['output_charset'])) {
-            $outputCharset = $convertDirOption['output_charset'];
+        if (isset($convertDirOptions['output_charset'])) {
+            $outputCharset = $convertDirOptions['output_charset'];
         }
 
         if (is_null($parentDir)) {
@@ -200,8 +202,8 @@ class ConvertFileAggregate
         }
         $convertDir = $dirname;
 
-        if (isset($convertDirOption['subdirs'])) {
-            foreach ($convertDirOption['subdirs'] as $subConvertDirOption) {
+        if (isset($convertDirOptions['subdirs'])) {
+            foreach ($convertDirOptions['subdirs'] as $subConvertDirOption) {
                 $this->resolveDirOptions($subConvertDirOption,
                     $inputCharset,
                     $outputCharset,
@@ -209,12 +211,13 @@ class ConvertFileAggregate
             }
         }
 
-        if (isset($convertDirOption['files'])) {
-            foreach ($convertDirOption['files'] as $convertFileOption) {
-                $convertFileOption['name'] = $concatWithParentDir($dirname,
-                    $convertFileOption['name']);
+        if (isset($convertDirOptions['files'])) {
+            foreach ($convertDirOptions['files'] as $convertFileOptions) {
+                $convertFileOptions['name'] = $concatWithParentDir(
+                    $dirname,
+                    $convertFileOptions['name']);
 
-                $this->resolveFileOptions($convertFileOption,
+                $this->resolveFileOptions($convertFileOptions,
                     $inputCharset,
                     $outputCharset);
             }

@@ -7,11 +7,9 @@ use PHPUnit_Framework_TestCase;
 
 class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 {
-    protected $container;
-
     public function validConvertFilesOptions()
     {
-        return array(
+        $convertFilesOptions = array(
             'input_charset'  => 'g-in-charset',
             'output_charset' => 'g-out-charset',
             'files' => array(
@@ -27,23 +25,31 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
                     'input_charset'  => 'd-in-charset',
                     'output_charset' => 'd-out-charset',
                     'files' => array(
-                        'name'           => 'foo.txt',
-                        'input_charset'  => 'f-d-in-charset',
-                        'output_charset' => 'f-d-out-charset',
+                        array(
+                            'name'           => 'foo.txt',
+                            'input_charset'  => 'f-d-in-charset',
+                            'output_charset' => 'f-d-out-charset',
+                        ),
                     ),
                     'subdirs' => array(
-                        'name'           => 'foo',
-                        'input_charset'  => 'sd-in-charset',
-                        'output_charset' => 'sd-out-charset',
+                        array(
+                            'name'           => 'foo',
+                            'input_charset'  => 'sd-in-charset',
+                            'output_charset' => 'sd-out-charset',
+                        ),
                     ),
                 ),
             ),
         );
+
+        return array(
+            array($convertFilesOptions),
+        );
     }
 
-    public function invalidConvertDirOptions()
+    public function invalidConvertFileOptions()
     {
-        return array(
+        $convertDirOptions = array(
             'files' => array(
                 array(
                     'input_charset'  => 'f-in-charset',
@@ -51,17 +57,25 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
                 ),
             ), 
         );
+
+        return array(
+            array($convertDirOptions),
+        );
     }
 
-    public function invalidConvertFileOptions()
+    public function invalidConvertDirOptions()
     {
-        return array(
+        $convertFileOptions = array(
             'dirs' => array(
                 array(
                     'input_charset'  => 'd-in-charset',
                     'output_charset' => 'd-out-charset',
                 ),
             ),
+        );
+
+        return array(
+            array($convertFileOptions),
         );
     }
 
@@ -77,14 +91,14 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
                 'output_charset' => 'f-out-charset',
             ),
             array(
-                'name'           => $this->canonicalPath('./ConvertFiles/_files/foo.txt'),
+                'name'           => $this->canonicalPath('./ConvertFile/_files/foo.txt'),
                 'input_charset'  => 'f-d-in-charset',
                 'output_charset' => 'f-d-out-charset',
             ),
         );
         $expectConvertDirs = array(
             array(
-                'name'           => $this->canonicalPath('./ConvertFiles/_files/foo'),
+                'name'           => $this->canonicalPath('./ConvertFile/_files/foo'),
                 'input_charset'  => 'sd-in-charset',
                 'output_charset' => 'sd-out-charset',
             ),
@@ -97,10 +111,10 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
         $expectFilters = array(
             'files' => array(
                 $this->canonicalPath(__FILE__),
-                $this->canonicalPath('./ConvertFiles/_files/foo.txt'),
+                $this->canonicalPath('./ConvertFile/_files/foo.txt'),
             ),
             'dirs' => array(
-                $this->canonicalPath('./ConvertFiles/_files/foo'),
+                $this->canonicalPath('./ConvertFile/_files/foo'),
                 $this->canonicalPath('./ConvertFile/_files'),
             ),
         );
@@ -108,8 +122,10 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
         $aggregate = new ConvertFileAggregate($convertFilesOptions);
 
         $container = $this->getMock('Tcc\\ConvertFile\\ConvertFileContainer');
-        $contaier->expects($this->exactly(4))
-                 ->method('addFile');
+        $container->expects($this->exactly(4))
+                  ->method('addFile')
+                  ->with($this->logicalOr($this->isType('string'),
+                    $this->isInstanceOf('Tcc\\ConvertFile\\ConvertFile')));
 
         $aggregate->addConvertFiles($container);
 
@@ -145,7 +161,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
     public function testSetDirectoryIteratorClassWillRaiseExceptionIfClassIsNotString()
     {
         $this->setExpectedException('InvalidArgumentException',
-            'Invalid itertor class');
+            'Invalid iterator class: false');
 
         $aggregate = new ConvertFileAggregate(array());
         $aggregate->setDirectoryIteratorClass(false);
@@ -154,7 +170,7 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
     public function testSetDirectoryIteratorClassWillRaiseExcetptionIfClassIsNotTraversable()
     {
         $this->setExpectedException('InvalidArgumentException',
-            'Invalid iterator class');
+                "Invalid iterator class: 'stdClass'");
 
         $aggregate = new ConvertFileAggregate(array());
         $aggregate->setDirectoryIteratorClass('stdClass');
@@ -170,11 +186,11 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
 
     public function testGetDirectoryIteratorClass()
     {
-        $aggregate = new ConverFileAggregate(array());
+        $aggregate = new ConvertFileAggregate(array());
         $aggregate->setDirectoryIteratorClass('DirectoryIterator');
 
         $this->assertEquals('DirectoryIterator',
-            $aggregate->getDirectoryIteratroClass());
+            $aggregate->getDirectoryIteratorClass());
     }
 
     public function testGetDiretoryIteratorClassWillReturnADefualtOneIfNotSetBefore()
@@ -182,13 +198,14 @@ class ConvertFileAggregateTest extends PHPUnit_Framework_TestCase
         $aggregate = new ConvertFileAggregate(array());
 
         $this->assertEquals('Tcc\\ConvertFile\\Iterator\\ConvertDirectoryIterator',
-            $aggregate->getConvertDirectoryIteratorClass());
+            $aggregate->getDirectoryIteratorClass());
     }
 
     protected static function canonicalPath($path)
     {
         if (!$path = realpath($path)) {
-            throw new \Exception();
+            throw new \InvalidArgumentException(sprintf(
+                'The path is not valid: %s', $path));
         }
 
         $path = rtrim(str_replace('\\', '/', $path), '/');
