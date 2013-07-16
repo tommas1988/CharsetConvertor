@@ -2,8 +2,8 @@
 namespace Tcc\Test\Convertor;
 
 use Tcc\Convertor\MbStringConvertor;
-use Tcc\Test\Convertor\Mock\MockConvertToStrategy;
-use Tcc\Test\Convertor\Mock\MockConvertFile;
+use Tcc\Test\Convertor\TestAssert\FooConvertToStrategy;
+use Tcc\ConvertFile\ConvertFile;
 use SplFileObject;
 use SplTempFileObject;
 use PHPUnit_Framework_TestCase;
@@ -25,33 +25,29 @@ class MbStringConvertorTest extends PHPUnit_Framework_TestCase
     public function testDoConvert()
     {
         $convertor         = $this->convertor;
-        $convertToStrategy = new MockConvertToStrategy;
+        $convertToStrategy = new FooConvertToStrategy;
         $convertor->setConvertToStrategy($convertToStrategy);
 
-        $convertFile = new MockConvertFile();
-
-        $convertFile->setIterator(new SplFileObject('./_files/foo.txt'));
-        $convertFile->setInputCharset('GBK');
-        $convertFile->setOutputCharset('UTF-8');
+        $convertFile = new ConvertFile('./Convertor/_files/foo.txt',
+            'GBK', 'UTF-8');
 
         $convertor->convert($convertFile);
 
-        $this->assertSame('ANSI编码', $convertToStrategy->getConverted());
+        $this->assertEquals('ANSI编码', $convertToStrategy->getConverted());
     }
 
-    public function testDoConvertErrorCanRaiseException()
+    public function testDoConvertErrorWillRaiseException()
     {
-        $this->setExpectedException('Exception');
+        $errMsg = 'Unable to convert file: foo.txt with input charset: '
+                . 'not-exists-charset and output charset: UTF-8';
+        $this->setExpectedException('RuntimeException');
 
         $convertor         = $this->convertor;
-        $convertToStrategy = new MockConvertToStrategy;
+        $convertToStrategy = new FooConvertToStrategy;
         $convertor->setConvertToStrategy($convertToStrategy);
 
-        $convertFile = new MockConvertFile();
-
-        $convertFile->setIterator(new SplTempFileObject);
-        $convertFile->setInputCharset('not-exists');
-        $convertFile->setOutputCharset('UTF-8');
+        $convertFile = new ConvertFile('./Convertor/_files/foo.txt',
+            'not-exists-charset', 'UTF-8');
 
         $convertor->convert($convertFile);
     }

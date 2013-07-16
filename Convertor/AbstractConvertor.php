@@ -4,7 +4,6 @@ namespace Tcc\Convertor;
 use Tcc\ConvertFile\ConvertFile;
 use Tcc\Convertor\ConvertToStrategy\AbstractConvertToStrategy;
 use Tcc\Convertor\ConvertToStrategy\LongNameConvertToStrategy;
-use SplFileObject;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -20,6 +19,16 @@ abstract class AbstractConvertor
 
     public function setTargetLocation($location)
     {
+        if (!is_string($location)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid location type: %s', gettype($location)));
+        }
+
+        if (!file_exists($location) && !mkdir($location, 0777, true)) {
+            throw new RuntimeException(sprintf(
+                'Can not create a directory: %s', $location));
+        }
+
         $this->targetLocation = static::canonicalPath($location);
         return $this;
     }
@@ -31,11 +40,6 @@ abstract class AbstractConvertor
         }
 
         return $this->targetLocation;
-    }
-
-    public function getConvertingFile()
-    {
-        return $this->convertFile;
     }
    
     public function setConvertToStrategy(AbstractConvertToStrategy $strategy)
@@ -57,15 +61,25 @@ abstract class AbstractConvertor
 
     public function convert(ConvertFile $convertFile)
     {
-        $this->setConvertFile($convertFile);
+        $this->convertFile = $convertFile;
 
         $this->convertFinish = false;
         $this->doConvert();
         $this->convertFinish = true;
+        
+        $this->convertFile = null;
+    }
+
+    public function getConvertFile()
+    {
+        return $this->convertFile;
     }
 
     public function convertFinish()
     {
+        if ($this->convertFile === null && !$this->convertFinish) {
+            return true;
+        }
         return (bool) $this->convertFinish;
     }
 
@@ -77,8 +91,8 @@ abstract class AbstractConvertor
                       . ' with input charset: ' . $this->convertFile->getInputCharset()
                       . ' and output charset: ' . $this->convertFile->getOutputCharset();
 
-        $this->convertFinish  = false;
-        $this->convertFile = null;
+        $this->convertFinish = false;
+        $this->convertFile   = null;
 
         throw new RuntimeException($errorMessage);
     }
@@ -86,7 +100,8 @@ abstract class AbstractConvertor
     public static function canonicalPath($path)
     {
         if (!$path = realpath($path)) {
-            throw new InvalidArgumentException();
+            throw new InvalidArgumentException(sprintf(
+                'Invalid path: %s', $path));
         }
 
         $path = rtrim(str_replace('\\', '/', $path), '/');

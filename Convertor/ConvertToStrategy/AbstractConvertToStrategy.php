@@ -16,22 +16,33 @@ abstract class AbstractConvertToStrategy
     public function setConvertor(AbstractConvertor $convertor)
     {
         $this->convertor = $convertor;
+        return $this;
     }
 
     public function convertTo($contents)
     {
-        $targetFile = $this->getTargateFile();
+        $targetFile = $this->getTargetFileObject();
 
-        if (!$targetFile instanceof SplFileObject) {
-            throw new RuntimeException('invalid targetFile');
+        if ($targetFile->fwrite($contents) !== strlen($contents)) {
+            throw new RuntimeException('write contents to target file failed');
         }
+    }
 
-        if (!$targetFile->fwrite($contents)) {
-            throw new Exception('write contents to target file failed');
+    public function restoreConvert()
+    {
+        if (!$this->convertor->convertFinish()) {
+            $targetFile = $this->getTargetFileObject();
+
+            $filename = $targetFile->getRealPath();
+            unset($targetFile, $this->targetFile);
+            if (!unlink($filename)) {
+                throw new RuntimeException(sprintf(
+                    'Can not delete target file: %s', $filename));
+            }
         }
     }
     
-    public function getTargetFile()
+    protected function getTargetFileObject()
     {
         $convertor = $this->convertor;
 
@@ -40,14 +51,8 @@ abstract class AbstractConvertToStrategy
         }
 
         $filename = $this->generateTargetFileName();
-
-        return $this->targetFile = new SplFileObject($filename, 'a');
-    }
-
-    public function restoreConvert()
-    {
-        $targetFile = $this->getTargetFile();
-
-        unlink($targetFile->getRealPath());
+        $this->targetFile = new SplFileObject($filename, 'a');
+        
+        return $this->targetFile;
     }
 }

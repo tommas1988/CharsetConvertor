@@ -1,11 +1,9 @@
 <?php
-namespace Tcc\Test\Convertor\Mock;
+namespace Tcc\Test\Convertor\TestAssert;
 
 use Tcc\Convertor\ConvertToStrategy\AbstractConvertToStrategy;
-use Tcc\Convertor\AbstractConvertor;
-use SplFileObject;
 
-class MockConvertToStrategy extends AbstractConvertToStrategy
+class FooConvertToStrategy extends AbstractConvertToStrategy
 {
     protected $converted;
 

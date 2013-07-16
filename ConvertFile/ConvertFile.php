@@ -2,9 +2,10 @@
 namespace Tcc\ConvertFile;
 
 use SplFileInfo;
+use IteratorAggregate;
 use InvalidArgumentException;
 
-class ConvertFile
+class ConvertFile implements IteratorAggregate
 {
     protected $inputCharset;
     protected $outputCharset;

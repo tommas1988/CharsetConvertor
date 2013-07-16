@@ -1,9 +1,9 @@
 <?php
 namespace Tcc\Test\Convertor;
 
+use Tcc\ConvertFile\ConvertFile;
 use Tcc\Test\Convertor\TestAssert\FooConvertor;
-use Tcc\Test\Convertor\Mock\MockConvertToStrategy;
-use Tcc\Test\Convertor\Mock\MockConvertFile;
+use Tcc\Test\Convertor\TestAssert\FooConvertToStrategy;
 use PHPUnit_Framework_TestCase;
 
 class AbstractConvertorTest extends PHPUnit_Framework_TestCase
@@ -18,18 +18,23 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
     public function testSetTargetLocation()
     {
         $convertor = $this->convertor;
+        $location  = './Convertor/_files/target-location';
 
-        $return = $convertor->setTargetLocation(__DIR__);
+        $return = $convertor->setTargetLocation($location);
         $this->assertSame($convertor, $return);
+        $this->assertFileExists($location);
+        if (!rmdir($location)) {
+            $this->fail('Can not remove the created directory');
+        }
     }
 
-    public function testSetTargetLoationWithNonDirCanRaiseException()
+    public function testSetTargetLoationWillRaiseExceptionIfPassNonStringValue()
     {
-        $this->setExpectedException('Exception');
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid location type: boolean');
         $convertor = $this->convertor;
 
-        $convertor->setTargetLocation('non-dir');
-        $this->assertNull($convertor->getTargetLocation());
+        $convertor->setTargetLocation(false);
     }
 
     public function testGetTargetLocation()
@@ -37,94 +42,77 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
         $convertor = $this->convertor;
 
         $convertor->setTargetLocation(__DIR__);
-        $this->assertEquals(str_replace('\\', '/', __DIR__), $convertor->getTargetLocation());
+        $this->assertEquals(str_replace('\\', '/', __DIR__),
+            $convertor->getTargetLocation());
     }
 
-    public function testGetTargetLocationThatDoseNotSetFirstCanRaiseException()
+    public function testGetTargetLocationWillRaiseExceptionIfNotSetBefore()
     {
-        $this->setExpectedException('Exception');
+        $this->setExpectedException('RuntimeException',
+            'targetLocation has not been setted');
         $convertor = $this->convertor;
 
         $convertor->getTargetLocation();
-    }
-
-    public function testSetConvertFile()
-    {
-        $convertor = $this->convertor;
-
-        $return = $convertor->setConvertFile(new MockConvertFile);
-        $this->assertSame($convertor, $return);
-    }
-
-    public function testGetConvertFile()
-    {
-        $convertor   = $this->convertor;
-        $convertFile = new MockConvertFile;
-
-        $convertor->setConvertFile($convertFile);
-        $this->assertSame($convertFile, $convertor->getConvertFile());
     }
 
     public function testSetConvertToStrategy()
     {
         $convertor = $this->convertor;
 
-        $return = $convertor->setConvertToStrategy(new MockConvertToStrategy);
+        $return = $convertor->setConvertToStrategy(new FooConvertToStrategy);
         $this->assertSame($convertor, $return);
     }
 
     public function testGetConvertToStrategy()
     {
         $convertor         = $this->convertor;
-        $convertToStrategy = new MockConvertToStrategy;
+        $convertToStrategy = new FooConvertToStrategy;
 
         $convertor->setConvertToStrategy($convertToStrategy);
         $this->assertSame($convertToStrategy, $convertor->getConvertToStrategy());
     }
 
-    public function testGetConvertToStrategyCanReturnADefaultOneIfNotSetFirst()
+    public function testGetConvertToStrategyCanReturnADefaultOneIfNotSet()
     {
         $convertor = $this->convertor;
 
         $convertToStrategy = $convertor->getConvertToStrategy();
-        $this->assertInstanceOf('Tcc\Convertor\ConvertToStrategy\LongNameConvertToStrategy',
+        $this->assertInstanceOf(
+            'Tcc\Convertor\ConvertToStrategy\LongNameConvertToStrategy',
             $convertToStrategy);
     }
 
     public function testConvert()
     {
         $convertor   = $this->convertor;
-        $convertFile = new MockConvertFile;
+        $convertFile = new ConvertFile('./Convertor/_files/foo.txt',
+            'in-charset', 'out-charset');
 
-        $this->assertFalse($convertor->getConvertFinishFlag());
         $convertor->convert($convertFile);
-        $this->assertTrue($convertor->getConvertFinishFlag());
+        $this->assertTrue($convertor->convertFinish());
     }
 
     public function testConvertError()
     {
-        $convertor   = $this->convertor;
-        $convertFile = new MockConvertFile;
+        $errMsg = 'Unable to convert file: foo.txt with input charset: in-charset'
+                . ' and output charset: out-charset';
+        $this->setExpectedException('RuntimeException', $errMsg);
+
+        $convertor = $this->convertor;
         $convertor->setTriggerConvertErrorFlag(true);
 
-        $this->setExpectedException('Exception');
         $convertToStrategy = $this->getMock(
-            'Tcc\\Convertor\\ConvertToStrategy\\AbstractConvertToStrategy');
+            'Tcc\\Test\\Convertor\\TestAssert\\FooConvertToStrategy');
         $convertToStrategy->expects($this->once())
                           ->method('restoreConvert');
 
         $convertor->setConvertToStrategy($convertToStrategy);
-                          
+
+        $convertFile = new ConvertFile('./Convertor/_files/foo.txt',
+            'in-charset', 'out-charset');
+
         $convertor->convert($convertFile);
-        $this->assertFalse($convertor->convertFinish());
-        $this->assertNull($convertor->getConvertFile());
-    }
-
-    public function testConvertFinish()
-    {
-        $convertor = $this->convertor;
-
-        $convertor->setConvertFinishFlag(true);
         $this->assertTrue($convertor->convertFinish());
+        $this->assertNull($convertor->getConvertFile());
     }
 }

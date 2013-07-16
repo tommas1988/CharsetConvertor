@@ -5,13 +5,19 @@ use Tcc\Convertor\ConvertToStrategy\AbstractConvertToStrategy;
 
 class FooConvertToStrategy extends AbstractConvertToStrategy
 {
-    protected function getTargetFileName()
+    protected $targetFilename;
+
+    public function generateTargetFileName()
     {
-        return 'foo.txt';
+        if (!$this->targetFilename) {
+        	$this->targetFilename = tempnam(sys_get_temp_dir(), 'tcc');
+        }
+
+        return $this->targetFilename;
     }
 
-    public function setTargetFile(SplFileObject $targetFile)
+    public function setTargetFilename($filename)
     {
-        $this->targetFile = $targetFile;
+    	$this->targetFilename = $filename;
     }
 }

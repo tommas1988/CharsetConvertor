@@ -182,7 +182,7 @@ class ConvertFileAggregate
         }
         $convertDir = $convertDirOptions['name'];
 
-        //concat directory name and parent directory name
+        //concat directory name with parent directory name
         $concatWithParentDir = function($parentDir, $name) {
             $pathname = $parentDir . '/' . rtrim(ltrim(basename($name), '/'), '/');
             return ConvertFileContainer::canonicalPath($pathname);

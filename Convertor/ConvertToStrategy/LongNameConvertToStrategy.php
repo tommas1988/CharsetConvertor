@@ -2,7 +2,7 @@
 namespace Tcc\Convertor\ConvertToStrategy;
 
 use Tcc\Convertor\AbstractConvertor;
-use Tcc\ConvertFile\ConvertFileInterface;
+use Tcc\ConvertFile\ConvertFile;
 use RuntimeException;
 
 class LongNameConvertToStrategy extends AbstractConvertToStrategy
@@ -12,7 +12,7 @@ class LongNameConvertToStrategy extends AbstractConvertToStrategy
         $convertor   = $this->convertor;
         $convertFile = $convertor->getConvertFile();
 
-        if (!$convertFile instanceof ConvertFileInterface) {
+        if (!$convertFile instanceof ConvertFile) {
             throw new RuntimeException('Invalid convertFile');
         }
 

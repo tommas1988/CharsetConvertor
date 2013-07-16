@@ -24,14 +24,4 @@ class FooConvertor extends AbstractConvertor
     {
         $this->triggerError = (bool) $flag;
     }
-
-    public function setConvertFinishFlag($flag)
-    {
-        $this->convertFinish = (bool) $flag;
-    }
-
-    public function getConvertFinishFlag()
-    {
-        return $this->convertFinish;
-    }
 }

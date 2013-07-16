@@ -2,7 +2,7 @@
 namespace Tcc\Test\Convertor\ConvertToStrategy;
 
 use Tcc\Convertor\ConvertToStrategy\LongNameConvertToStrategy;
-use Tcc\Test\Convertor\ConvertToStrategy\Mock\MockConvertor;
+use Tcc\Test\Convertor\ConvertToStrategy\TestAssert\FooConvertor;
 use PHPUnit_Framework_TestCase;
 
 class LongNameConvertToStrategyTest extends PHPUnit_Framework_TestCase
@@ -19,7 +19,7 @@ class LongNameConvertToStrategyTest extends PHPUnit_Framework_TestCase
                     ->method('getPathname')
                     ->will($this->returnValue('C:/test/foo/bar/file'));
 
-        $convertor = new MockConvertor;
+        $convertor = new FooConvertor;
         $convertor->setConvertFile($convertFile);
         $convertor->setTargetLocation('_files');
 
@@ -41,7 +41,7 @@ class LongNameConvertToStrategyTest extends PHPUnit_Framework_TestCase
                     ->method('getPathname')
                     ->will($this->returnValue('/test/foo/bar/file'));
 
-        $convertor = new MockConvertor;
+        $convertor = new FooConvertor;
         $convertor->setConvertFile($convertFile);
         $convertor->setTargetLocation('_files');
 
