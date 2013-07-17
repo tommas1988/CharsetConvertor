@@ -12,7 +12,7 @@ class FooConvertToStrategy extends AbstractConvertToStrategy
         $this->converted = $contents;
     }
 
-    public function generateTargetFileName()
+    public function getTargetFileName()
     {
 
     }

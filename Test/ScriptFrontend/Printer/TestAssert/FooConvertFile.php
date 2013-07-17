@@ -1,5 +1,5 @@
 <?php
-namespace Tcc\Test\ScriptFrontend\TestAssert;
+namespace Tcc\Test\ScriptFrontend\Printer\TestAssert;
 
 use Tcc\ConvertFile\ConvertFile;
 
@@ -7,7 +7,7 @@ class FooConvertFile extends ConvertFile
 {
 	protected $convertError;
 	protected $name;
-	protected $extension;
+	protected $path;
 
 	public function __construct($name = null,
 		$inputCharset = null, $outputCharset = null
@@ -17,29 +17,18 @@ class FooConvertFile extends ConvertFile
 		$this->outputCharset = $outputCharset;
 	}
 
-	public function setConvertErrorFlag($flag)
-	{
-		$this->convertError = (bool) $flag;
-	}
-
-	public function getConvertErrorFlag()
-	{
-		return $this->convertError;
-	}
-
 	public function getFilename($withoutExtension = false)
 	{
 		return $this->name;
 	}
 
-	public function setExtension($extension)
+	public function setPath($path)
 	{
-		$this->extension = $extension;
-		return $this;
+		$this->path = $path;
 	}
 
-	public function getExtension()
+	public function getPath()
 	{
-		return $this->extension;
+		return $this->path;
 	}
 }

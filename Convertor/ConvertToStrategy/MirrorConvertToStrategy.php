@@ -15,7 +15,7 @@ class MirrorConvertToStrategy extends AbstractConvertToStrategy
         return $this->basePah;
     }
 
-    protected function generateTargetFileName()
+    protected function getTargetFile()
     {
 
     }

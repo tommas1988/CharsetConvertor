@@ -9,7 +9,7 @@ class LongNameConvertToStrategyTest extends PHPUnit_Framework_TestCase
 {
     protected $strategy;
 
-    public function testGenerateTargetFileNameWithWinStyle()
+    public function testGetTargetFileNameWithWinStyle()
     {
         $convertFile = $this->getMockBuilder('Tcc\ConvertFile\ConvertFile')
                             ->disableOriginalConstructor()
@@ -21,17 +21,17 @@ class LongNameConvertToStrategyTest extends PHPUnit_Framework_TestCase
 
         $convertor = new FooConvertor;
         $convertor->setConvertFile($convertFile);
-        $convertor->setTargetLocation('_files');
+        $convertor->setTargetLocation(__DIR__);
 
         $strategy = new LongNameConvertToStrategy;
         $strategy->setConvertor($convertor);
 
-        $targetPathname = str_replace('\\', '/', getcwd())
-                        . '/_files/test_foo_bar_file';
-        $this->assertSame($targetPathname, $strategy->generateTargetFileName());
+        $targetPathname = str_replace('\\', '/', __DIR__)
+                        . '/test_foo_bar_file';
+        $this->assertSame($targetPathname, $strategy->getTargetFileName());
     }
 
-    public function testGenerateTargetFileNameWithUnixStyle()
+    public function testGetTargetFileNameWithUnixStyle()
     {
         $convertFile = $this->getMockBuilder('Tcc\ConvertFile\ConvertFile')
                             ->disableOriginalConstructor()
@@ -43,13 +43,13 @@ class LongNameConvertToStrategyTest extends PHPUnit_Framework_TestCase
 
         $convertor = new FooConvertor;
         $convertor->setConvertFile($convertFile);
-        $convertor->setTargetLocation('_files');
+        $convertor->setTargetLocation(__DIR__);
 
         $strategy = new LongNameConvertToStrategy;
         $strategy->setConvertor($convertor);
 
-        $targetPathname = str_replace('\\', '/', getcwd())
-                        . '/_files/test_foo_bar_file';
-        $this->assertSame($targetPathname, $strategy->generateTargetFileName());
+        $targetPathname = str_replace('\\', '/', __DIR__)
+                        . '/test_foo_bar_file';
+        $this->assertSame($targetPathname, $strategy->getTargetFileName());
     }
 }

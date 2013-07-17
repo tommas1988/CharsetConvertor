@@ -33,7 +33,6 @@ class ConvertFileContainer
     public function addFiles(ConvertFileAggregate $aggregate)
     {
         $aggregate->addConvertFiles($this);
-
         return $this;
     }
     

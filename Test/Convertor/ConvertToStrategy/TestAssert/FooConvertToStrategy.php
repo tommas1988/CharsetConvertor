@@ -7,7 +7,7 @@ class FooConvertToStrategy extends AbstractConvertToStrategy
 {
     protected $targetFilename;
 
-    public function generateTargetFileName()
+    public function getTargetFileName()
     {
         if (!$this->targetFilename) {
         	$this->targetFilename = tempnam(sys_get_temp_dir(), 'tcc');
@@ -16,8 +16,8 @@ class FooConvertToStrategy extends AbstractConvertToStrategy
         return $this->targetFilename;
     }
 
-    public function setTargetFilename($filename)
+    public function getTargetFile()
     {
-    	$this->targetFilename = $filename;
+    	return $this->targetFile;
     }
 }

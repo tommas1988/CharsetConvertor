@@ -3,8 +3,6 @@ namespace Tcc\Test\Convertor\ConvertToStrategy;
 
 use Tcc\Test\Convertor\ConvertToStrategy\TestAssert\FooConvertToStrategy;
 use Tcc\Test\Convertor\ConvertToStrategy\TestAssert\FooConvertor;
-use SplFileObject;
-use SplTempFileObject;
 use PHPUnit_Framework_TestCase;
 
 class AbstractConvertToStrategyTest extends PHPUnit_Framework_TestCase
@@ -38,34 +36,30 @@ class AbstractConvertToStrategyTest extends PHPUnit_Framework_TestCase
         }
 
         $this->assertEquals(implode('', $contents),
-            file_get_contents($strategy->generateTargetFileName()));
+            file_get_contents($strategy->getTargetFileName()));
     }
 
-    public function testConvertToWillRaiseExceptionIfCanNotWriteToTargetFile()
+    public function testReset()
     {
-        $this->setExpectedException('RuntimeException');
-
-        $strategy = $this->getMock(get_class($this->strategy),
-            array('getTargetFileObject'));
-
-        $strategy->expects($this->once())
-                 ->method('getTargetFileObject')
-                 ->will($this->returnValue(new SplFileObject(__FILE__, 'r')));
+        $strategy = $this->strategy;
 
         $strategy->convertTo('something');
+        $this->assertInstanceOf('SplFileObject', $strategy->getTargetFile());
+
+        $strategy->reset();
+        $this->assertNull($strategy->getTargetFile());
     }
 
     public function testRestoreConvert()
-    {
-        $this->fail('There are some problem with convertFinish assertion and restoreConvert');
-        
+    {   
         $strategy = $this->strategy;
-        $strategy->setTargetFilename(
-            './Convertor/ConvertToStrategy/_files/temp.txt');
         
-        $strategy->restoreConvert();
+        $strategy->convertTo('something');
+        $this->assertFileExists($strategy->getTargetFileName());
 
+        $strategy->restoreConvert();
+        $this->assertNull($strategy->getTargetFile());
         $this->assertFalse(
-            file_exists($strategy->generateTargetFileName()));
+            file_exists($strategy->getTargetFileName()));
     }
 }

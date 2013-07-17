@@ -11,7 +11,7 @@ abstract class AbstractConvertToStrategy
     protected $convertor;
     protected $targetFile;
 
-    abstract public function generateTargetFileName();
+    abstract public function getTargetFileName();
 
     public function setConvertor(AbstractConvertor $convertor)
     {
@@ -21,38 +21,35 @@ abstract class AbstractConvertToStrategy
 
     public function convertTo($contents)
     {
-        $targetFile = $this->getTargetFileObject();
+        if ($this->targetFile === null
+            || !$this->targetFile instanceof SplFileObject
+        ) {
+            $filename = $this->getTargetFileName();
+            $this->targetFile = new SplFileObject($filename, 'a');
+        }
 
-        if ($targetFile->fwrite($contents) !== strlen($contents)) {
+        if ($this->targetFile->fwrite($contents) !== strlen($contents)) {
             throw new RuntimeException('write contents to target file failed');
         }
     }
 
     public function restoreConvert()
     {
-        if (!$this->convertor->convertFinish()) {
-            $targetFile = $this->getTargetFileObject();
+        if ($this->targetFile !== null) {
+            $filename = $this->targetFile->getRealPath();
+            //reset target file to null to be able delete it; 
+            $this->targetFile = null;
 
-            $filename = $targetFile->getRealPath();
-            unset($targetFile, $this->targetFile);
             if (!unlink($filename)) {
                 throw new RuntimeException(sprintf(
                     'Can not delete target file: %s', $filename));
             }
         }
     }
-    
-    protected function getTargetFileObject()
+
+    public function reset()
     {
-        $convertor = $this->convertor;
-
-        if ($this->targetFile && !$convertor->convertFinish()) {
-            return $this->targetFile;
-        }
-
-        $filename = $this->generateTargetFileName();
-        $this->targetFile = new SplFileObject($filename, 'a');
-        
-        return $this->targetFile;
+        $this->targetFile = null;
+        return $this;
     }
 }

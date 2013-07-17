@@ -7,7 +7,7 @@ use RuntimeException;
 
 class LongNameConvertToStrategy extends AbstractConvertToStrategy
 {
-    public function generateTargetFileName()
+    public function getTargetFileName()
     {
         $convertor   = $this->convertor;
         $convertFile = $convertor->getConvertFile();

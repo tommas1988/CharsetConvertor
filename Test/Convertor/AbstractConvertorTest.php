@@ -84,12 +84,19 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
 
     public function testConvert()
     {
-        $convertor   = $this->convertor;
+        $convertor = $this->convertor;
+
+        $convertToStrategy = $this->getMock(
+            'Tcc\\Test\\Convertor\\TestAssert\\FooConvertToStrategy');
+        $convertToStrategy->expects($this->once())
+                          ->method('reset');
+
+        $convertor->setConvertToStrategy($convertToStrategy);
+
         $convertFile = new ConvertFile('./Convertor/_files/foo.txt',
             'in-charset', 'out-charset');
 
         $convertor->convert($convertFile);
-        $this->assertTrue($convertor->convertFinish());
     }
 
     public function testConvertError()
@@ -112,7 +119,6 @@ class AbstractConvertorTest extends PHPUnit_Framework_TestCase
             'in-charset', 'out-charset');
 
         $convertor->convert($convertFile);
-        $this->assertTrue($convertor->convertFinish());
         $this->assertNull($convertor->getConvertFile());
     }
 }

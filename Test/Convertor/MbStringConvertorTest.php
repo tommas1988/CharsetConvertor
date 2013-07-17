@@ -4,8 +4,6 @@ namespace Tcc\Test\Convertor;
 use Tcc\Convertor\MbStringConvertor;
 use Tcc\Test\Convertor\TestAssert\FooConvertToStrategy;
 use Tcc\ConvertFile\ConvertFile;
-use SplFileObject;
-use SplTempFileObject;
 use PHPUnit_Framework_TestCase;
 
 class MbStringConvertorTest extends PHPUnit_Framework_TestCase

@@ -3,7 +3,7 @@ namespace Tcc\Test\ScriptFrontend\Printer;
 
 use Tcc\ScriptFrontend\Runner;
 use Tcc\ScriptFrontend\Printer\ConsolePrinter;
-use Tcc\Test\ScriptFrontend\Printer\Mock\MockConvertFile;
+use Tcc\Test\ScriptFrontend\Printer\TestAssert\FooConvertFile;
 use PHPUnit_Framework_TestCase;
 
 class ConsolePrinterTest extends PHPUnit_Framework_TestCase
@@ -63,8 +63,8 @@ class ConsolePrinterTest extends PHPUnit_Framework_TestCase
                ->method('convertFileCount')
                ->will($this->returnValue(3));
 
-        $runner->setConvertResult(new MockConvertFile)
-               ->setConvertResult(new MockConvertFile, 'error');
+        $runner->setConvertResult(new FooConvertFile)
+               ->setConvertResult(new FooConvertFile, 'error');
 
         $printer->setAppRunner($runner);
 
@@ -98,23 +98,17 @@ class ConsolePrinterTest extends PHPUnit_Framework_TestCase
                ->method('convertFileCount')
                ->will($this->returnValueMap($map));
 
-        $convertFileOne = new MockConvertFile;
-        $convertFileOne->setFilename('convert-file-one')
-                       ->setInputCharset('in-charset')
-                       ->setOutputCharset('out-charset')
-                       ->setPath('convert-file-one-path');
+        $convertFileOne = new FooConvertFile('convert-file-one',
+            'in-charset', 'out-charset');
+        $convertFileOne->setPath('convert-file-one-path');
 
-        $convertFileTwo = new MockConvertFile;
-        $convertFileTwo->setFilename('convert-file-two')
-                       ->setInputCharset('in-charset')
-                       ->setOutputCharset('out-charset')
-                       ->setPath('convert-file-two-path');
+        $convertFileTwo = new FooConvertFile('convert-file-two',
+            'in-charset', 'out-charset');
+        $convertFileTwo->setPath('convert-file-two-path');
 
-        $convertFileThree = new MockConvertFile;
-        $convertFileThree->setFilename('convert-file-three')
-                         ->setInputCharset('in-charset')
-                         ->setOutputCharset('out-charset')
-                         ->setPath('convert-file-three-path');
+        $convertFileThree = new FooConvertFile('convert-file-three',
+            'in-charset', 'out-charset');
+        $convertFileThree->setPath('convert-file-three-path');
 
         $runner->setOption('verbose', true)
                ->setConvertResult($convertFileOne)

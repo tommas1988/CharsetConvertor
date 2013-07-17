@@ -3,10 +3,8 @@ namespace Tcc\ScriptFrontend;
 
 use Tcc\Convertor\AbstractConvertor;
 use Tcc\Convertor\ConvertorFactory;
-use Tcc\ConvertFile\ConvertFileContainerInterface;
 use Tcc\ConvertFile\ConvertFileContainer;
-use Tcc\ConvertFile\ConvertFileInterface;
-use Tcc\ConvertFile\ConvertFileAggregateInterface;
+use Tcc\ConvertFile\ConvertFile;
 use Tcc\ConvertFIle\ConvertFileAggregate;
 use Tcc\Resolver\ResolverUtils as Resolver;
 use Tcc\ScriptFrontend\Printer\PrinterInterface;
@@ -62,14 +60,12 @@ class Runner
         if (isset($keys['--help'])) {
             ConsolePrinter::printHelpInfo();
             $this->isHalt = true;
-
             return;
         }
 
         if (isset($keys['--version'])) {
             ConsolePrinter::printVersion();
             $this->isHalt = true;
-
             return;
         }
 
@@ -223,7 +219,6 @@ class Runner
     public function setOptions(array $options)
     {
         $this->options = $options;
-
         return $this;
     }
 
@@ -289,7 +284,7 @@ class Runner
         return $this->convertor;
     }
 
-    public function setConvertFileContainer(ConvertFileContainerInterface $container)
+    public function setConvertFileContainer(ConvertFileContainer $container)
     {
         $container->setConvertExtensions($this->getOption('extensions'));
         $this->convertFileContainer = $container;
@@ -323,8 +318,17 @@ class Runner
         return $this->printer;
     }
 
-    public function addConvertFile($convertFile, $inputCharset, $outputCharset)
-    {
+    public function addConvertFile($convertFile,
+        $inputCharset = null, $outputCharset = null
+    ) {
+        if (!is_string($convertFile)
+            && !$convertFile instanceof ConvertFile
+        ) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid convert file, type: %s, value: %s',
+                gettype($convertFile), var_export($convertFile, true)));
+        }
+
         $container = $this->getConvertFileContainer();
         $container->addFile($convertFile, $inputCharset, $outputCharset);
 
@@ -335,7 +339,7 @@ class Runner
     {
         if (is_array($convertFiles)) {
             $convertFiles = new ConvertFileAggregate($convertFiles);
-        } elseif (!$convertFiles instanceof ConvertFileAggregateInterface) {
+        } elseif (!$convertFiles instanceof ConvertFileAggregate) {
             throw new InvalidArgumentException('Invalid convertFiles');
         }
 
@@ -355,7 +359,7 @@ class Runner
 
     public function convert()
     {
-        $convertFiles = $this->getConvertFileContainer()->getConvertFiles();
+        $convertFiles = $this->getConvertFileContainer()->getFiles();
 
         foreach ($convertFiles as $convertFile) {
             //reset convert error flag
@@ -382,7 +386,7 @@ class Runner
         return $this->convertError;
     }
 
-    public function convertFileCount($flag = 0)
+    public function convertFileCount($flag = Runner::COUNT_ALL)
     {
         switch ($flag) {
             case static::COUNT_ALL:
@@ -398,15 +402,14 @@ class Runner
         }
     }
 
-    public function setConvertResult(ConvertFileInterface $convertFile, $errMsg = null)
+    public function setConvertResult(ConvertFile $convertFile, $errMsg = null)
     {
         if (!is_string($errMsg) && $errMsg !== null) {
-            throw new InvalidArgumentException(
-                'Invalid error message type: ' . gettype($errMsg));
+            throw new InvalidArgumentException(sprintf(
+                'Invalid error message type: %s', gettype($errMsg)));
         }
 
         $this->resultStorage->attach($convertFile, $errMsg);
-
         return $this;
     }
 

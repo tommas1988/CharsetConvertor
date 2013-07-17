@@ -321,7 +321,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $result = $runner->setConvertFileContainer($mockContainer);
 
         $this->assertSame($runner, $result);
-        $this->assertInstanceOf('Tcc\\ConvertFile\\ConvertFileContainerInterface',
+        $this->assertInstanceOf('Tcc\\ConvertFile\\ConvertFileContainer',
             $runner->getConvertFileContainer());
     }
 
@@ -377,6 +377,15 @@ class RunnerTest extends PHPUnit_Framework_TestCase
         $runner->setConvertFileContainer($container);
 
         $runner->addConvertFile($convertFile, $inputCharset, $outputCharset);
+    }
+
+    public function testAddConvertFileWillRaiseExceptionIfPassValueIsNotStringOrConvertFileInstance()
+    {
+        $this->setExpectedException('InvalidArgumentException',
+            'Invalid convert file, type: boolean, value: false');
+
+        $runner = new Runner;
+        $runner->addConvertFile(false);
     }
 
     public function testAddConvertFilesWithArray()
@@ -453,9 +462,9 @@ class RunnerTest extends PHPUnit_Framework_TestCase
 
         $runner = $this->prepareConvertor();
 
-        $runner->addConvertFile(new FooConvertFile, 'input-charset', 'output-charset')
-               ->addConvertFile($badConvertFile, 'input-charset', 'output-charset')
-               ->addConvertFile(new FooConvertFile, 'input-charset', 'output-charset');
+        $runner->addConvertFile(new FooConvertFile)
+               ->addConvertFile($badConvertFile)
+               ->addConvertFile(new FooConvertFile);
 
         $runner->convert();
 
@@ -482,8 +491,8 @@ class RunnerTest extends PHPUnit_Framework_TestCase
 
         $runner = $this->prepareConvertor();
 
-        $runner->addConvertFile($convertFile, 'input-charset', 'output-charset')
-               ->addConvertFile($badConvertFile, 'input-charset', 'output-charset');
+        $runner->addConvertFile($convertFile)
+               ->addConvertFile($badConvertFile);
 
         $runner->convert();
         $resultStorage = $runner->getConvertResult();

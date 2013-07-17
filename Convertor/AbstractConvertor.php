@@ -12,7 +12,6 @@ abstract class AbstractConvertor
     protected $convertToStrategy;
     protected $convertFile;
     protected $targetLocation;
-    protected $convertFinish = false;
 
     abstract public function getName();
     abstract protected function doConvert();
@@ -62,25 +61,14 @@ abstract class AbstractConvertor
     public function convert(ConvertFile $convertFile)
     {
         $this->convertFile = $convertFile;
-
-        $this->convertFinish = false;
         $this->doConvert();
-        $this->convertFinish = true;
-        
-        $this->convertFile = null;
+
+        $this->getConvertToStrategy()->reset();
     }
 
     public function getConvertFile()
     {
         return $this->convertFile;
-    }
-
-    public function convertFinish()
-    {
-        if ($this->convertFile === null && !$this->convertFinish) {
-            return true;
-        }
-        return (bool) $this->convertFinish;
     }
 
     protected function convertError()
@@ -91,8 +79,7 @@ abstract class AbstractConvertor
                       . ' with input charset: ' . $this->convertFile->getInputCharset()
                       . ' and output charset: ' . $this->convertFile->getOutputCharset();
 
-        $this->convertFinish = false;
-        $this->convertFile   = null;
+        $this->convertFile = null;
 
         throw new RuntimeException($errorMessage);
     }
