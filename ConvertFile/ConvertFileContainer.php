@@ -2,7 +2,6 @@
 namespace Tcc\ConvertFile;
 
 use InvalidArgumentException;
-use SplFileInfo;
 
 class ConvertFileContainer
 {
@@ -49,7 +48,6 @@ class ConvertFileContainer
     public function clearFiles()
     {
         $this->convertFiles = array();
-
         return $this;
     }
 
