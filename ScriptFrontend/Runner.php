@@ -1,4 +1,11 @@
 <?php
+/**
+ * CharsetConvertor
+ * 
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source repository
+ */
+
 namespace Tcc\ScriptFrontend;
 
 use Tcc\Convertor\AbstractConvertor;
@@ -14,6 +21,9 @@ use InvalidArgumentException;
 use RuntimeException;
 use Exception;
 
+/**
+ * Application frontend.
+ */
 class Runner
 {
     const PRE_CONVERT  = 0;
