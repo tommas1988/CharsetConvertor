@@ -1,14 +1,33 @@
 <?php
+/**
+ * CharsetConvertor
+ *
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source code repository
+ */
+
 namespace Tcc\ScriptFrontend\Printer;
 
 use Tcc\ScriptFrontend\Runner;
 use RuntimeException;
 use InvalidArgumentException;
 
+/**
+ * Print message on console.
+ */
 class ConsolePrinter implements PrinterInterface
 {
+    /**
+     * Application frontend
+     *
+     * @var Tcc\ScriptFrontend\Runner
+     */
     protected $runner;
 
+    /**
+     * @param  Tcc\ScriptFrontend\Runner $runner
+     * @return self
+     */
     public function setAppRunner(Runner $runner)
     {
         $this->runner = $runner;
@@ -16,6 +35,10 @@ class ConsolePrinter implements PrinterInterface
         return $this;
     }
 
+    /**
+     * @return Tcc\ScriptFrontend\Runner
+     * @throws RuntimeException If application frontend is not setted yet
+     */
     public function getAppRunner()
     {
         if (!$this->runner) {
@@ -25,6 +48,11 @@ class ConsolePrinter implements PrinterInterface
         return $this->runner;
     }
 
+    /**
+     * Update Printer to print message
+     *
+     * @param int $state
+     */
     public function update($state)
     {
         if (!is_int($state)) {
@@ -47,27 +75,44 @@ class ConsolePrinter implements PrinterInterface
         }
     }
 
+    /**
+     * Print version number on console
+     */
     public static function printVersion()
     {
         static::printAppHeader();
         print(Runner::VERSION);
     }
 
+    /**
+     * Print help message on console
+     */
     public static function printHelpInfo()
     {
 
     }
 
+    /**
+     * Print application information on console
+     */
     public static function printAppHeader()
     {
         print("CharsetConvertor by Tommas Yuan\n");
     }
 
+    /**
+     * Print undefined command error message on console
+     */
     public static function printUndefinedCommand($command)
     {
         print("Unrecognize command: {$command}");
     }
 
+    /**
+     * Invalid state error
+     *
+     * @param mixed @state Invalid state
+     */
     protected function invalidStateError($state)
     {
         throw new InvalidArgumentException(sprintf(
@@ -75,6 +120,9 @@ class ConsolePrinter implements PrinterInterface
             gettype($state), $state));
     }
 
+    /**
+     * Print convert process on console.
+     */
     protected function printConvertProcess()
     {
         $runner = $this->getAppRunner();
@@ -93,6 +141,9 @@ class ConsolePrinter implements PrinterInterface
         printf("\r[%-{$totalCount}s] %d/%d", $states, count($convertResult), $totalCount);
     }
 
+    /**
+     * Print convert result on console.
+     */
     protected function printConvertResult()
     {
         $runner = $this->getAppRunner();
