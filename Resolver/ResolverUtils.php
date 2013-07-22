@@ -71,7 +71,7 @@ class ResolverUtils
      * Get common information from a convert element.
      *
      * Elememt like files and dirs have some common information to retrive.
-     * These code is basicly reduce the redundant codes
+     * These code is simply reduce the redundant codes
      *
      * @param  SimpleXmlElement $convertElementInfo
      * @return array
