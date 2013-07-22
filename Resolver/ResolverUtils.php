@@ -1,11 +1,27 @@
 <?php
+/**
+ * CharsetConvertor
+ * 
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source code repository
+ */
+
 namespace Tcc\Resolver;
 
 use SimpleXMLElement;
 use InvalidArgumentException;
 
+/**
+ * A set of resolvers.
+ */
 class ResolverUtils
 {
+    /**
+     * A map of namespaces.
+     *
+     * Class name resolver use this map to find out correspond namespace
+     * @var string[]
+     */
     protected static $namespaces = array(
         'convert_file'                  => 'Tcc\\ConvertFile',
         'convert_file_iterator'         => 'Tcc\\ConvertFile\\Iterator',
@@ -16,6 +32,12 @@ class ResolverUtils
         'resolver'                      => 'Tcc\\Resolver',
     );
 
+    /**
+     * Configuration file resolver
+     *
+     * @param  SimpleXmlElement $convertInfo
+     * @return array
+     */
     public static function resolveConvertInfoFromXml(SimpleXMLElement $convertInfo)
     {
         $result = array();
@@ -45,6 +67,16 @@ class ResolverUtils
         return $result;
     }
 
+    /**
+     * Get common information from a convert element.
+     *
+     * Elememt like files and dirs have some common information to retrive.
+     * These code is basicly reduce the redundant codes
+     *
+     * @param  SimpleXmlElement $convertElementInfo
+     * @return array
+     * @throws InvaidArgumentException If convert element dose not containe name element
+     */
     protected static function resolveCommonConvertInfo(SimpleXMLElement $converElementtInfo)
     {
         if (!isset($converElementtInfo->name)) {
@@ -66,9 +98,14 @@ class ResolverUtils
         return $result;
     }
 
-    protected static function resolveConvertDirInfo(SimpleXMLElement $convertDirInfo,
-        $isSubdir = false
-    ){
+    /**
+     * Resolve dirs element.
+     *
+     * @param  SimpleXmlElement $convertDirInfo
+     * @return array
+     */
+    protected static function resolveConvertDirInfo(SimpleXMLElement $convertDirInfo)
+    {
         $result = static::resolveCommonConvertInfo($convertDirInfo);
 
         if (isset($convertDirInfo->files)) {
@@ -88,6 +125,17 @@ class ResolverUtils
         return $result;
     }
 
+    /**
+     * Class name resolver.
+     *
+     * Reolve class name use namespace identifier and unqualified class name
+     *
+     * @param  string $nsIdentifier The key of namespaces mapper
+     * @param  string $name Unqualified class name
+     * @return string Fully qualfied class name
+     * @throws InvalidArgumentException If namespace identifier dose not in 
+     *         namespaces mapper
+     */
     public static function resolveClassName($nsIdentifier, $name)
     {
         if (!isset(static::$namespaces[$nsIdentifier])) {
