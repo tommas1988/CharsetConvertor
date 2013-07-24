@@ -1,18 +1,39 @@
 <?php
+/**
+ * CharsetConvertor
+ * 
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source code repository
+ */
+
 namespace Tcc\Convertor;
 
+/**
+ * MbString convertor
+ */
 class MbStringConvertor extends AbstractConvertor
 {
+    /**
+     * @return string
+     */
     public function getName()
     {
         return 'mbstring';
     }
 
+    /**
+     * Convert error handler.
+     *
+     * This is the wrapper method of {@link AbstractConvertor::convertError()}
+     */
     public function convertErrorHandler()
     {
         $this->convertError();
     }
 
+    /**
+     * The actual convert method
+     */
     protected function doConvert()
     {
         $convertFile       = $this->convertFile;
