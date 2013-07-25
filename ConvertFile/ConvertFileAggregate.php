@@ -1,4 +1,11 @@
 <?php
+/**
+ * CharsetConvertor
+ * 
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source code repository
+ */
+
 namespace Tcc\ConvertFile;
 
 use InvalidArgumentException;
@@ -6,15 +13,52 @@ use RuntimeException;
 use RecursiveIteratorIterator;
 use Traversable;
 
+/**
+ * Convert file aggregate
+ */
 class ConvertFileAggregate
 {
+    /**
+     * Convert files
+     * @var array
+     */
     protected $convertFiles = array();
-    protected $convertDirs  = array();
-    protected $filenames    = array();
-    protected $filters      = array();
+
+    /**
+     * Directory that contains convert files
+     * @var array
+     */
+    protected $convertDirs = array();
+
+    /**
+     * Mark convert file that have been added to container
+     * @var array
+     */
+    protected $filenames = array();
+
+    /**
+     * CovnertFileIterator filter({@link Iterator\CovnertFileIterator})
+     * @var array
+     */
+    protected $filters = array();
+
+    /**
+     * The class that can iterate directory to find convert files
+     * @var Iterator\ConvertFileIterator
+     */
     protected $iteratorClass;
+
+    /**
+     * Convert file container
+     * @var ConvertFileContainer
+     */
     protected $container;
-    protected $added        = false;
+
+    /**
+     * Mark the file have already been added to ConvertFileContainer
+     * @var bool
+     */
+    protected $added = false;
     
     public function __construct(array $convertFilesOptions)
     {
