@@ -31,20 +31,23 @@ class ConvertFileAggregate
     protected $convertDirs = array();
 
     /**
-     * Mark convert file that have been added to container
+     * Convert file names.
+     *
+     * These file names are part of filters and also prevent to processing 
+     * same file twice
      * @var array
      */
     protected $filenames = array();
 
     /**
-     * CovnertFileIterator filter({@link Iterator\CovnertFileIterator})
+     * CovnertDirectoryIterator filter({@link Iterator\CovnertFileIterator})
      * @var array
      */
     protected $filters = array();
 
     /**
      * The class that can iterate directory to find convert files
-     * @var Iterator\ConvertFileIterator
+     * @var Iterator\ConvertDirectoryIterator
      */
     protected $iteratorClass;
 
@@ -60,11 +63,21 @@ class ConvertFileAggregate
      */
     protected $added = false;
     
+    /**
+     * Constructor
+     *
+     * @param array
+     */
     public function __construct(array $convertFilesOptions)
     {
         $this->convertFilesOptions = $convertFilesOptions;
     }
     
+    /**
+     * Add convert files to the container
+     *
+     * @param ConvertFileContainer $container
+     */
     public function addConvertFiles(ConvertFileContainer  $container)
     {
         if ($this->added) {
@@ -103,6 +116,14 @@ class ConvertFileAggregate
         $this->added = true;
     }
 
+    /**
+     * Set ConvertDirectoryIterator class
+     *
+     * @param  string $class
+     * @return self
+     * @throws InvalidArgumentException If class is not string or subclass of 
+     *         traversable
+     */
     public function setDirectoryIteratorClass($class)
     {
         if (!is_string($class) || !self::isSubclassOf($class, 'Traversable')) {
@@ -115,6 +136,11 @@ class ConvertFileAggregate
         return $this;
     }
 
+    /**
+     * Get ConvertDirectoryIterator class
+     *
+     * @return string
+     */
     public function getDirectoryIteratorClass()
     {
         if (!$this->iteratorClass) {
@@ -149,6 +175,11 @@ class ConvertFileAggregate
         return $this->filters;
     }
 
+    /**
+     * The actual method that add convert files to the container
+     *
+     * @throws RuntimeException If There is not container
+     */
     protected function addConvertFilesToContainer()
     {
         if (!$this->container) {
@@ -178,6 +209,13 @@ class ConvertFileAggregate
         }
     }
 
+    /**
+     * Get a ConvertDirectoryIterator
+     *
+     * @param  string $dir
+     * @param  array $filters
+     * @return RecursiveIteratorIterator;
+     */
     protected function getConvertDirectoryIterator($dir, $filters)
     {
         $class    = $this->getDirectoryIteratorClass();
