@@ -225,6 +225,12 @@ class ConvertFileAggregate
         return new RecursiveIteratorIterator($iterator);
     }
 
+    /**
+     * @param  array $convertFileOptions
+     * @param  string $inputCharset
+     * @param  string $outputCharset
+     * @throws InvalidArgumentException If options do not contain a name field
+     */
     protected function resolveFileOptions(array $convertFileOptions,
         $inputCharset, $outputCharset
     ) {
@@ -255,6 +261,13 @@ class ConvertFileAggregate
         );
     }
 
+    /**
+     * @param  array $convertDirOptions
+     * @param  null|string $inputCharset
+     * @param  null|string $outputCharset
+     * @param  null|string $parentDir
+     * @throws InvalidArgumentException If options do not contain a name field
+     */
     protected function resolveDirOptions(array $convertDirOptions,
         $inputCharset = null, $outputCharset = null, $parentDir = null
     ) {
@@ -312,6 +325,13 @@ class ConvertFileAggregate
         );
     }
 
+    /**
+     * Test if a class is derived from another one.
+     *
+     * @param  string $className The test class name
+     * @param  string Base class name or interface name
+     * @return bool
+     */
     protected static function isSubclassOf($className, $type)
     {
         if (is_subclass_of($className, $type)) {

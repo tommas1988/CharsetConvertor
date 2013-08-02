@@ -1,4 +1,11 @@
 <?php
+/**
+ * CharsetConvertor
+ * 
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source code repository
+ */
+
 namespace Tcc\ConvertFile\Iterator;
 
 use Tcc\ConvertFile\ConvertFileContainer;
@@ -7,12 +14,37 @@ use RecursiveFilterIterator;
 use RecursiveDirectoryIterator;
 use InvalidArgumentException;
 
+/**
+ * ConvertDirectoryIterator.
+ * 
+ * Filter out convert files
+ */
 class ConvertDirectoryIterator extends RecursiveFilterIterator
 {
+    /**
+     * @var string
+     */
     protected $inputCharset;
+
+    /**
+     * @var string
+     */
     protected $outputCharset;
+
+    /**
+     * @var array
+     */
     protected $filters;
 
+    /**
+     * Constructor.
+     *
+     * @param  array $convertDirOptions
+     * @throws InvalidArgumentException If options do not contain 
+     *         input_charset and output_charset fields
+     * @throws InvalidArgumentException If options do not contain 
+     *         either iterator or name field
+     */
     public function __construct(array $convertDirOptions)
     {
         if (!isset($convertDirOptions['input_charset'])
@@ -43,6 +75,11 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
         parent::__construct($iterator);
     }
 
+    /**
+     * Implement the RecursiveFilterIterator.
+     *
+     * @return bool
+     */
     public function accept()
     {
         $fileInfo = parent::current();
@@ -67,6 +104,11 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
 
     }
 
+    /**
+     * Return a ConvertDirectoryIterator for a directory.
+     *
+     * @return ConvertDirectoryIterator
+     */
     public function getChildren()
     {
         $convertDirOptions = array(
@@ -81,6 +123,11 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
         return $iterator;
     }
 
+    /**
+     * Return a ConvertFile
+     *
+     * @return null|ConvertFile
+     */
     public function current()
     {
         $fileInfo = parent::current();
@@ -91,6 +138,12 @@ class ConvertDirectoryIterator extends RecursiveFilterIterator
         return null;
     }
 
+    /**
+     * Set iterator filters
+     *
+     * @param  array $filters
+     * @return self
+     */
     public function setFilter(array $filters)
     {
         if (!isset($filters['files']) || !isset($filters['dirs'])) {
