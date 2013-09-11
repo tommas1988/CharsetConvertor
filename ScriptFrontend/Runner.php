@@ -17,6 +17,7 @@ use Tcc\Resolver\ResolverUtils as Resolver;
 use Tcc\ScriptFrontend\Printer\PrinterInterface;
 use Tcc\ScriptFrontend\Printer\ConsolePrinter;
 use SplObjectStorage;
+use SimpleXMLElement;
 use InvalidArgumentException;
 use RuntimeException;
 use Exception;
