@@ -1,4 +1,11 @@
 <?php
+/**
+ * CharsetConvertor
+ * 
+ * @author Tommas Yuan
+ * @link   http://github.com/tommas1988/CharsetConvertor the source code repository
+ */
+
 namespace Tcc\Convertor\ConvertToStrategy;
 
 use Tcc\Convertor\AbstractConvertor;
@@ -6,19 +13,48 @@ use SplFileObject;
 use RuntimeException;
 use Exception;
 
+/**
+ * Abstract ConvertToStrategy class
+ */
 abstract class AbstractConvertToStrategy
 {
+    /**
+     * @var Tcc\Covertor\AbstractConvertor
+     */
     protected $convertor;
+
+    /**
+     * Target convert file
+     *
+     * @var \SplFileObject
+     */
     protected $targetFile;
 
+    /**
+     * Get target file name
+     *
+     * @return string
+     */
     abstract public function getTargetFileName();
 
+    /**
+     * Set convertor
+     *
+     * @param  Tcc\Convertor\AbstractConvertor $convertor
+     * @return self
+     */
     public function setConvertor(AbstractConvertor $convertor)
     {
         $this->convertor = $convertor;
         return $this;
     }
 
+    /**
+     * Put converted contents to the target file
+     *
+     * @param  string $contents
+     * @throws RuntimeException If failed to write to the target file
+     */
     public function convertTo($contents)
     {
         if ($this->targetFile === null
@@ -33,6 +69,11 @@ abstract class AbstractConvertToStrategy
         }
     }
 
+    /**
+     * Restore convert process
+     *
+     * @throws RuntimeException If can not delete the generated target file
+     */
     public function restoreConvert()
     {
         if ($this->targetFile !== null) {
@@ -47,6 +88,11 @@ abstract class AbstractConvertToStrategy
         }
     }
 
+    /**
+     * Reset state when finish converting a file
+     *
+     * @return self
+     */
     public function reset()
     {
         $this->targetFile = null;
