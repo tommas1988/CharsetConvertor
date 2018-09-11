@@ -142,7 +142,6 @@ class ResolverUtils
             throw new InvalidArgumentException('Invalid namespace identifier');
         }
 
-        
         $canonicalName = function($name) {
             return str_replace(' ', '', ucwords(strtr($name, '_', ' ')));
         };
